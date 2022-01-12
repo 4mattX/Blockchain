@@ -14,7 +14,13 @@ if __name__ == '__main__':
 
     time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
-    block = Block(transactions,time, 0 )
+    block = Block(transactions,time, 0)
 
     for transaction in transactions:
-        print(transaction.getHash())
+        print("-----------------------")
+        print("Sender -> " + transaction.getSender())
+        print("Receiver -> " + transaction.getReceiver())
+        print("Amount -> " + str(transaction.getAmount()))
+        print("HashValue: -> " + transaction.getHash())
+        print("-----------------------")
+        print("")

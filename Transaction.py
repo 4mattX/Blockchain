@@ -19,5 +19,15 @@ class Transaction (object):
 
         return hashValue
 
+    def getSender(self):
+        return self.sender
+
+    def getReceiver(self):
+        return self.receiver
+
+    def getAmount(self):
+        return self.amount
+
     def getHash(self):
         return self.hash
+
