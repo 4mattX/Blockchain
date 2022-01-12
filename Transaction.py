@@ -3,4 +3,3 @@ class Transaction (object):
         self.sender = sender
         self.receiver = receiver
         self.amount = amount
-    

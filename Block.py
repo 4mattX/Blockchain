@@ -5,3 +5,6 @@ class Block (object):
         self.prev = ''
         self.index = index
         self.message = message
+
+    def createHash(self):
+        hash = ""
