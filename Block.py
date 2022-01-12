@@ -15,9 +15,16 @@ def calculateHash(trans):
 
 class Block (object):
     def __init__(self, transactions, time, index):
+        #record of transaction sender, receiver, amount transfered, and time of transaction processed
         self.transactions = transactions
+
+        #time of this block's creation
         self.time = time
+
+        #header that SHOULD match the previous block's Proof of Work hash function, if not this block is invalid
         self.prev = calculateHash(transactions)
+
+        #interger value of the block created
         self.index = index
         print("Block created")
 
