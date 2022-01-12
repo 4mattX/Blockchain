@@ -1,15 +1,16 @@
 import hashlib
 
-
+# Adds UniCoded representations of Hashes together then converts that summation into a new hashValue
 def calculateHash(trans):
-
-    inputString = ''
-
+    inputUnicode = 0
     for tran in trans:
-        inputString += tran.getHash()
+        hash = tran.getHash()
+
+        for i in range (len(hash)):
+            inputUnicode += ord(hash[i])
 
     # SHA256 HashValue
-    hashValue = hashlib.sha256(inputString.encode('utf-8')).hexdigest()
+    hashValue = hashlib.sha256(str(inputUnicode).encode('utf-8')).hexdigest()
     return hashValue
 
 
