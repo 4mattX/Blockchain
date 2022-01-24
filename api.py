@@ -1,34 +1,36 @@
-import fastapi
+from fastapi import FastAPI, Path
 import uvicorn
-#yo matt, if you're testing this and it pops up a bunch of missing components or whatever,
-    #click on terminal (very bottom of the IDE
-    #type in "pip install fastapi" and then "pip install uvicorn"
+from typing import Optional
+from pydantic import BaseModel
 
-api = fastapi.FastAPI()
+app = FastAPI()
 
-#enter in endpoint /docs/ to get a listing of all endpoints in the api
+class user(BaseModel):
+    userID: int
+    userName: str
+    balance: Optional[float] = 0.00
 
-#default endpoint or http page of our api
-@api.get('/')
-def index():
-    return {
-        "message": "Home page"
-    }
+usersList = {}
 
-@api.get('/user/')
-def user():
-    return{
-        "message": "User page"
-    }
+@app.get("/")
+def home():
+    return{"Home Page"}
 
-"""
-@api.get("/user/{userID}")
-def get_userID(userID: str):
-    #(WIP CODE)return userName[userID]
-    #idea is to havea directory of users with their ID numbers
-    #enter in ">web address</user/>userID< and it will load data based on that ID's account
-    # like total funds and name tied to account
-"""
+#functions for the users class
+@app.post("/create_user/{userID}/{userName}/{balance}")
+def create_user(userID: int, userName: str, balance: float = 0.00):
+    if user.userID in usersList:
+        return {"Error": "User ID has already been taken."}
+    elif user.userName in usersList:
+        return {"Error": "User name has already been taken."}
+
+@app.get("/get_user/{userID}")
+def get_user(userID: int, item: user):
+    return usersList[userID]
 
 
-uvicorn.run(api)
+
+
+
+
+uvicorn.run(app)
