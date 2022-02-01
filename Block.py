@@ -1,17 +1,5 @@
 import hashlib
-
-# Adds UniCoded representations of Hashes together then converts that summation into a new hashValue
-def calculateHash(trans):
-    inputUnicode = 0
-    for tran in trans:
-        hash = tran.getHash()
-
-        for i in range (len(hash)):
-            inputUnicode += ord(hash[i])
-
-    # SHA256 HashValue
-    hashValue = hashlib.sha256(str(inputUnicode).encode('utf-8')).hexdigest()
-    return hashValue
+import json
 
 
 class Block (object):
@@ -22,12 +10,37 @@ class Block (object):
         #time of this block's creation
         self.time = time
 
-        #header that SHOULD match the previous block's Proof of Work hash function, if not this block is invalid
-        self.prev = calculateHash(transactions)
-
         #interger value of the block created
         self.index = index
-        print("Block created")
+
+        self.prev = ''
+        self.nonse = 0
+        self.hash = self.calculateHash()
+
+    def calculateHash(self):
+
+        transactionsHash = ''
+
+        inputUnicode = 0
+        for transaction in self.transactions:
+            transactionsHash += transaction.getHash()
+
+        hashString = str(self.time) + transactionsHash + self.getPrev() + str(self.getNonse)
+        encodedHash = json.dumps(hashString, sort_keys=True).encode()
+
+        return hashlib.sha256(encodedHash).hexdigest()
 
     def addTransaction(self, transaction):
         self.transactions.add(transaction)
+
+    def getPrev(self):
+        return self.prev
+
+    def getNonse(self):
+        return self.nonse
+
+    def getTransactions(self):
+        return self.transactions
+
+    def getHash(self):
+        return self.hash

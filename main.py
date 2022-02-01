@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, time
 
 from Block import Block
+from Blockchain import Blockchain
 from Transaction import Transaction
 
 def createTestBlock():
@@ -23,5 +24,25 @@ def createTestBlock():
         print("-----------------------")
         print("")
 
+def createTestBlockChain():
+    blockChain = Blockchain()
+
+    transactions = [];
+    block = Block(transactions, time(), 0)
+    blockChain.addBlock(block)
+    block = Block(transactions, time(), 1)
+    blockChain.addBlock(block)
+    block = Block(transactions, time(), 2)
+    blockChain.addBlock(block)
+    block = Block(transactions, time(), 3)
+    blockChain.addBlock(block)
+
+    for block in blockChain.getChain():
+        print("-----------------------------")
+        print("Hash -> " + block.getHash())
+        print("Prev -> " + block.getPrev())
+        print("Transactions -> " + str(block.getTransactions()))
+        print("-----------------------------")
+
 if __name__ == '__main__':
-    createTestBlock()
+    createTestBlockChain()
