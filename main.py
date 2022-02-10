@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from random import randint
 
 from Block import Block
 from Blockchain import Blockchain
@@ -28,21 +29,37 @@ def createTestBlockChain():
     blockChain = Blockchain()
 
     transactions = [];
-    block = Block(transactions, time(), 0)
+    block = Block(getRandomTransactions(), time(), 0)
     blockChain.addBlock(block)
-    block = Block(transactions, time(), 1)
+    block = Block(getRandomTransactions(), time(), 1)
     blockChain.addBlock(block)
-    block = Block(transactions, time(), 2)
+    block = Block(getRandomTransactions(), time(), 2)
     blockChain.addBlock(block)
-    block = Block(transactions, time(), 3)
+    block = Block(getRandomTransactions(), time(), 3)
     blockChain.addBlock(block)
 
     for block in blockChain.getChain():
-        print("-----------------------------")
         print("Hash -> " + block.getHash())
         print("Prev -> " + block.getPrev())
-        print("Transactions -> " + str(block.getTransactions()))
-        print("-----------------------------")
+        print("Transactions -> ")
+        for transaction in block.getTransactions():
+            print("    sender: " + str(transaction.getSender()) + "  receiver: " + str(transaction.getReceiver()) + "  amount: " + str(transaction.getAmount()))
+        print("-----------------------------------------------------------------------------")
+
+def getRandomTransactions():
+    transactions = []
+
+    sender = 'me'
+    receiver = 'you'
+
+    amtTransactions = randint(1, 10)
+
+    for x in range(amtTransactions):
+        amount = randint(1, 1000)
+        transactions.append(Transaction(sender, receiver, amount))
+
+    return transactions
+
 
 if __name__ == '__main__':
     createTestBlockChain()
