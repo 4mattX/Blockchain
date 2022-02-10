@@ -60,6 +60,15 @@ def getRandomTransactions():
 
     return transactions
 
+def mineTestBlock():
+    blockchain = Blockchain()
+    transaction = Transaction("Sender", "Receiver", 10)
+    blockchain.pendingTransactions.append(transaction)
+    blockchain.minePendingTransactions("Matthew")
+
+    print("Length: ", len(blockchain.chain))
+
 
 if __name__ == '__main__':
-    createTestBlockChain()
+    # createTestBlockChain()
+    mineTestBlock()

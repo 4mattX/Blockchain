@@ -8,6 +8,9 @@ class Blockchain (object):
     def __init__(self):
         self.chain = []
         self.pendingTransactions = []
+        self.difficulty = 3
+        self.blockSize = 10
+        self.reward = 20
         self.addFirstBlock()
 
     def addFirstBlock(self):
@@ -42,4 +45,31 @@ class Blockchain (object):
 
     def getChain(self):
         return self.chain
+
+    def minePendingTransactions(self, miner):
+
+        pendingLength = len(self.pendingTransactions);
+        if (pendingLength <= 0):
+            print("There must be at least one transaction on block to mine")
+            return False
+        else:
+            for i in range(0, pendingLength, self.blockSize):
+
+                end = i + self.blockSize
+                if i >= pendingLength:
+                    end = pendingLength
+
+                transactionSlice = self.pendingTransactions[i:end]
+
+                newBlock = Block(transactionSlice, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), len(self.chain))
+
+                hashValue = self.getLastBlock().getHash()
+                newBlock.prev = hashValue
+                newBlock.mineBlock(self.difficulty)
+                self.chain.append(newBlock)
+            print("Mining Transactions Success!")
+
+            rewardGiver = Transaction("Dat Boi Rewards", miner, self.reward)
+            self.pendingTransactions = [rewardGiver]
+        return True
 
