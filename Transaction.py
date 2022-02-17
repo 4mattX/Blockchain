@@ -1,18 +1,36 @@
 from datetime import datetime
 import hashlib
 from Cryptodome.PublicKey import RSA
+from base64 import b64decode, b64encode
 
 
 class Transaction (object):
-    def __init__(self, sender, receiver, amount):
+    def __init__(self, sender, receiver, amount, senderKey, key):
         self.sender = sender
         self.receiver = receiver
         self.amount = amount
         self.time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        self.senderKey = senderKey
+        self.receiverKey = key
         self.hash = self.calculateHash()
         self.signed = False
 
-    # def signTransaction(self):
+
+    # FIX LATER
+    def signTransaction(self, key, senderKey):
+        if (self.hash != self.calculateHash()):
+            print("INVALID Transaction")
+            return False
+
+        if(str(key.publickey().export_key()) != str(senderKey.publickey().export_key())):
+            print("INVALID Transaction signature")
+
+        # pkcs1_15.new(key)
+
+        self.signed = True
+        print("Transaction Signed!")
+        return True
+
 
     def calculateHash(self):
         # Hash String Value that will be converted into a hash value
@@ -23,27 +41,23 @@ class Transaction (object):
 
         return hashValue
 
-    def signTransaction(self, key, senderKey):
-        if (self.hash != self.calculateHash()):
-            print("!!! Invalid Transaction !!!")
-            return False
+    # def signTransaction(self, key, senderKey):
+    #     if (self.hash != self.calculateHash()):
+    #         print("!!! Invalid Transaction !!!")
+    #         return False
+    #
+    #     # Converting StringKeys into Byte Data Structure
+    #     byteKey = RSA.importKey(key.encode("ASCII"))
+    #     byteSenderKey = RSA.importKey(senderKey.encode("ASCII"))
+    #
+    #     if (byteKey != byteSenderKey):
+    #         print("Tampered Transaction Error")
+    #         return False
+    #
+    #     self.signed = True
+    #     print("Transaction Signed")
+    #     return True
 
-        # Converting StringKeys into Byte Data Structure
-        byteKey = RSA.importKey(key.encode("ASCII"))
-        byteSenderKey = RSA.importKey(senderKey.encode("ASCII"))
-
-        if (key != senderKey):
-            print("Tampered Transaction Error")
-            return False
-
-        self.signed = True;
-        print("Transaction Signed")
-        return True
-
-
-        print("Transaction Signed")
-        self.signed = True
-        return True
 
     def isValidTransaction(self):
         if (self.hash != self.calculateHash()):

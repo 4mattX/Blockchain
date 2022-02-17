@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 
 from Block import Block
 from Transaction import Transaction
@@ -26,6 +26,8 @@ class Blockchain (object):
         scanner = open("receiver.pem", "wb")
         scanner.write(publicKey)
 
+        return key.publickey().export_key().decode('ASCII')
+
     def addFirstBlock(self):
         transactions = []
         # transactions.append(Transaction('dat', 'boi', 420))
@@ -41,7 +43,13 @@ class Blockchain (object):
         self.chain.append(block)
 
     def addTransaction(self, sender, receiver, amount, key, senderKey):
-        transaction = Transaction(sender, receiver, amount)
+
+        byteKey = key.encode("ASCII")
+        byteSenderKey = senderKey.encode("ASCII")
+
+        key = RSA.import_key(byteKey)
+        senderKey = RSA.import_key(byteSenderKey)
+
 
         if not sender:
             print("No Sender Error")
@@ -53,8 +61,14 @@ class Blockchain (object):
             print("No Amount Error")
             return False
 
+        transaction = Transaction(sender, receiver, amount, key, senderKey)
+
         transaction.signTransaction(key, senderKey)
-        self.pendingTransactions.append(transaction)
+
+        if transaction.isValidTransaction():
+            self.pendingTransactions.append(transaction)
+            return True
+        return False
 
     def getChain(self):
         return self.chain
@@ -82,7 +96,7 @@ class Blockchain (object):
                 self.chain.append(newBlock)
             print("Mining Transactions Success!")
 
-            rewardGiver = Transaction("Dat Boi Rewards", miner, self.reward)
+            rewardGiver = Transaction("Dat Boi Rewards", miner, self.reward, None, None)
             self.pendingTransactions = [rewardGiver]
         return True
 

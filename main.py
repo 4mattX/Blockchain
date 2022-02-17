@@ -62,13 +62,27 @@ def getRandomTransactions():
 
 def mineTestBlock():
     blockchain = Blockchain()
-    transaction = Transaction("Sender", "Receiver", 10)
+
+    senderKey = blockchain.generateKeys()
+    receiverKey = blockchain.generateKeys()
+
+    transaction = Transaction("Sender", "Receiver", 10, senderKey, receiverKey)
     blockchain.pendingTransactions.append(transaction)
     blockchain.minePendingTransactions("Matthew")
 
     print("Length: ", len(blockchain.chain))
 
+def testValidTransaction():
+    blockchain = Blockchain()
+
+    key = blockchain.generateKeys()
+    key = blockchain.generateKeys()
+    print(key)
+
+    blockchain.addTransaction("Sender", "Receiver", 10, key, key)
+
+    blockchain.minePendingTransactions("Sender")
 
 if __name__ == '__main__':
     # createTestBlockChain()
-    mineTestBlock()
+    testValidTransaction()
