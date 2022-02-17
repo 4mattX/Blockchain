@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from crypto.PublicKey import RSA
+
 from Block import Block
 from Transaction import Transaction
 
@@ -12,6 +14,17 @@ class Blockchain (object):
         self.blockSize = 10
         self.reward = 20
         self.addFirstBlock()
+
+    # REWORK THIS!
+    def generateKeys(self):
+        key = RSA.generate(2048)
+        privateKey = key.exportKey()
+        scanner = open("private.pem", "wb")
+        scanner.write(privateKey)
+
+        publicKey = key.publickey().export_key()
+        scanner = open("receiver.pem", "wb")
+        scanner.write(publicKey)
 
     def addFirstBlock(self):
         transactions = []

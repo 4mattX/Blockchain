@@ -12,6 +12,8 @@ class Transaction (object):
         self.hash = self.calculateHash()
         self.signed = False
 
+    # def signTransaction(self):
+
     def calculateHash(self):
         # Hash String Value that will be converted into a hash value
         inputString = self.sender + self.receiver + str(self.amount) + str(self.time)
