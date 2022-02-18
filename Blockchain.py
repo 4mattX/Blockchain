@@ -15,7 +15,7 @@ class Blockchain (object):
         self.reward = 20
         self.addFirstBlock()
 
-    # REWORK THIS!
+    # Returns private and public key pair
     def generateKeys(self):
         key = RSA.generate(2048)
         privateKey = key.exportKey()
@@ -26,7 +26,11 @@ class Blockchain (object):
         scanner = open("receiver.pem", "wb")
         scanner.write(publicKey)
 
-        return key.publickey().export_key().decode('ASCII')
+        keyPair = []
+        keyPair.append(privateKey)
+        keyPair.append(publicKey)
+
+        return keyPair
 
     def addFirstBlock(self):
         transactions = []
@@ -42,13 +46,13 @@ class Blockchain (object):
         block.prev = self.chain[-1].getHash()
         self.chain.append(block)
 
-    def addTransaction(self, sender, receiver, amount, key, senderKey):
+    def addTransaction(self, sender, receiver, amount, privateKey, publicKey):
 
-        byteKey = key.encode("ASCII")
-        byteSenderKey = senderKey.encode("ASCII")
+        # newPrivateKey = privateKey.encode("ASCII")
+        # newPublicKey = publicKey.encode("ASCII")
 
-        key = RSA.import_key(byteKey)
-        senderKey = RSA.import_key(byteSenderKey)
+        # key = RSA.import_key(byteKey)
+        # senderKey = RSA.import_key(byteSenderKey)
 
 
         if not sender:
@@ -61,9 +65,9 @@ class Blockchain (object):
             print("No Amount Error")
             return False
 
-        transaction = Transaction(sender, receiver, amount, key, senderKey)
+        transaction = Transaction(sender, receiver, amount, privateKey, publicKey)
 
-        transaction.signTransaction(key, senderKey)
+        transaction.signTransaction(privateKey, publicKey)
 
         if transaction.isValidTransaction():
             self.pendingTransactions.append(transaction)

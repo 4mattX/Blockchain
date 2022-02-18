@@ -4,6 +4,9 @@ from random import randint
 from Block import Block
 from Blockchain import Blockchain
 from Transaction import Transaction
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Hash import SHA256
+from Cryptodome.Signature import pkcs1_15
 
 def createTestBlock():
     transactions = [Transaction("Matthew0", "Thuan0", 420),
@@ -75,11 +78,34 @@ def mineTestBlock():
 def testValidTransaction():
     blockchain = Blockchain()
 
-    key = blockchain.generateKeys()
-    key = blockchain.generateKeys()
-    print(key)
+    keyPair = blockchain.generateKeys()
 
-    blockchain.addTransaction("Sender", "Receiver", 10, key, key)
+    privateKey = keyPair[0]
+    publicKey = keyPair[1]
+
+    keyPair2 = blockchain.generateKeys()
+    fakePublicKey = keyPair2[1]
+
+    # print(privateKey)
+    # print(publicKey)
+    #
+    # newPrivateKey = RSA.import_key(privateKey)
+    # newPublicKey = RSA.import_key(publicKey)
+    #
+    # message = b'very nice message'
+    # h = SHA256.new(message)
+    # signature = pkcs1_15.new(newPrivateKey).sign(h)
+    #
+    # try:
+    #     pkcs1_15.new(newPublicKey).verify(h, signature)
+    #     print("Valid")
+    # except (ValueError, TypeError):
+    #     print("INVALID")
+
+    print(privateKey)
+    print(publicKey)
+
+    blockchain.addTransaction("Sender", "Receiver", 10, privateKey, publicKey)
 
     blockchain.minePendingTransactions("Sender")
 

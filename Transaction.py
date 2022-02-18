@@ -2,6 +2,8 @@ from datetime import datetime
 import hashlib
 from Cryptodome.PublicKey import RSA
 from base64 import b64decode, b64encode
+from Cryptodome.Hash import SHA256
+from Cryptodome.Signature import pkcs1_15
 
 
 class Transaction (object):
@@ -17,19 +19,30 @@ class Transaction (object):
 
 
     # FIX LATER
-    def signTransaction(self, key, senderKey):
+    def signTransaction(self, privateKey, publicKey):
         if (self.hash != self.calculateHash()):
             print("INVALID Transaction")
             return False
 
-        if(str(key.publickey().export_key()) != str(senderKey.publickey().export_key())):
+        # if(str(key.publickey().export_key()) != str(senderKey.publickey().export_key())):
+        #     print("INVALID Transaction signature")
+        #     return False
+
+        newPrivateKey = RSA.import_key(privateKey)
+        newPublicKey = RSA.import_key(publicKey)
+
+        message = b'Verifier Message'
+        h = SHA256.new(message)
+        signature = pkcs1_15.new(newPrivateKey).sign(h)
+
+        try:
+            pkcs1_15.new(newPublicKey).verify(h, signature)
+            print("Valid Transaction")
+            self.signed = True
+            return True
+        except (ValueError, TypeError):
             print("INVALID Transaction signature")
-
-        # pkcs1_15.new(key)
-
-        self.signed = True
-        print("Transaction Signed!")
-        return True
+        return False
 
 
     def calculateHash(self):
