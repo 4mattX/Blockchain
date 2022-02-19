@@ -1,5 +1,6 @@
 from datetime import datetime, time
 from random import randint
+import sys
 
 from Block import Block
 from Blockchain import Blockchain
@@ -105,10 +106,68 @@ def testValidTransaction():
     print(privateKey)
     print(publicKey)
 
-    blockchain.addTransaction("Sender", "Receiver", 10, privateKey, publicKey)
+    blockchain.addTransaction("Receiver", 10, publicKey, privateKey)
 
-    blockchain.minePendingTransactions("Sender")
+    # blockchain.minePendingTransactions(publicKey)
+
+def simulateBlockchain():
+
+    blockchain = Blockchain()
+
+    loop = True
+    while (loop):
+        print("1 - Add Transaction")
+        print("2 - Mine Block")
+        print("3 - Print Pending Transactions")
+        print("4 - Print Blockchain")
+        print("5 - Generate Wallet Keys")
+        print("6 - End Program")
+        print("-------------------------------")
+        value = input("-> ")
+
+        if (value == "1"):
+            print("In the receiver directory place the correct Public Key")
+            print("In the sender directory place both your Private and Public Key")
+            amount = input("Amount -> ")
+
+            with open('receiver/public.pem', "rb") as file:
+                receiverKey = RSA.import_key(file.read())
+
+            with open('sender/public.pem', "rb") as file:
+                publicKey = RSA.import_key(file.read())
+
+            with open('sender/private.pem', "rb") as file:
+                privateKey = RSA.import_key(file.read())
+
+            blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
+            print("")
+            print("Added to pending transaction MEMPOOL")
+            print("")
+            
+        if (value == "2"):
+
+            with open('miner/public.pem', "rb") as file:
+                minerKey = RSA.import_key(file.read())
+
+            blockchain.minePendingTransactions(minerKey)
+
+        if (value == "3"):
+            with open("mempool.txt", "rb") as file:
+                print(file.read())
+
+        if (value == "4"):
+            for block in blockchain.getChain():
+                print("Hash -> " + block.getHash())
+                print("Prev -> " + block.getPrev())
+                print("Transactions -> ")
+                for transaction in block.getTransactions():
+                    print("    sender: " + str(transaction.getSender()) + "  receiver: " + str(transaction.getReceiver()) + "  amount: " + str(transaction.getAmount()))
+                print("-----------------------------------------------------------------------------")
+
+        if (value == "5"):
+            keyPair = blockchain.generateKeys()
+            print ("Check Files")
+
 
 if __name__ == '__main__':
-    # createTestBlockChain()
-    testValidTransaction()
+    simulateBlockchain()

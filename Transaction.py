@@ -7,13 +7,12 @@ from Cryptodome.Signature import pkcs1_15
 
 
 class Transaction (object):
-    def __init__(self, sender, receiver, amount, senderKey, key):
-        self.sender = sender
-        self.receiver = receiver
+    def __init__(self, receiverKey, amount, publicKey, privateKey):
+        self.receiverKey = receiverKey
+        self.publicKey = publicKey
+        self.privateKey = privateKey
         self.amount = amount
         self.time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-        self.senderKey = senderKey
-        self.receiverKey = key
         self.hash = self.calculateHash()
         self.signed = False
 
@@ -28,8 +27,8 @@ class Transaction (object):
         #     print("INVALID Transaction signature")
         #     return False
 
-        newPrivateKey = RSA.import_key(privateKey)
-        newPublicKey = RSA.import_key(publicKey)
+        newPrivateKey = privateKey
+        newPublicKey = publicKey
 
         message = b'Verifier Message'
         h = SHA256.new(message)
@@ -47,7 +46,7 @@ class Transaction (object):
 
     def calculateHash(self):
         # Hash String Value that will be converted into a hash value
-        inputString = self.sender + self.receiver + str(self.amount) + str(self.time)
+        inputString = str(self.publicKey) + str(self.receiverKey) + str(self.amount) + str(self.time)
 
         # SHA256 HashValue
         hashValue = hashlib.sha256(inputString.encode('utf-8')).hexdigest()
@@ -76,7 +75,7 @@ class Transaction (object):
         if (self.hash != self.calculateHash()):
             return False
 
-        if(self.sender == self.receiver):
+        if(self.publicKey == self.receiverKey):
             return False
 
         if not self.signed:
@@ -85,10 +84,10 @@ class Transaction (object):
         return True
 
     def getSender(self):
-        return self.sender
+        return self.publicKey
 
     def getReceiver(self):
-        return self.receiver
+        return self.receiverKey
 
     def getAmount(self):
         return self.amount

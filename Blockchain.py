@@ -19,11 +19,11 @@ class Blockchain (object):
     def generateKeys(self):
         key = RSA.generate(2048)
         privateKey = key.exportKey()
-        scanner = open("private.pem", "wb")
+        scanner = open("generate/private.pem", "wb")
         scanner.write(privateKey)
 
         publicKey = key.publickey().export_key()
-        scanner = open("receiver.pem", "wb")
+        scanner = open("generate/public.pem", "wb")
         scanner.write(publicKey)
 
         keyPair = []
@@ -46,30 +46,30 @@ class Blockchain (object):
         block.prev = self.chain[-1].getHash()
         self.chain.append(block)
 
-    def addTransaction(self, sender, receiver, amount, privateKey, publicKey):
+    def addTransaction(self, receiverKey, amount, publicKey, privateKey):
 
-        # newPrivateKey = privateKey.encode("ASCII")
-        # newPublicKey = publicKey.encode("ASCII")
-
-        # key = RSA.import_key(byteKey)
-        # senderKey = RSA.import_key(byteSenderKey)
-
-
-        if not sender:
-            print("No Sender Error")
+        if not publicKey:
+            print("No Public Key Error")
             return False
-        if not receiver:
+        if not privateKey:
+            print("No Private Key Error")
+            return False
+        if not receiverKey:
             print("No Receiver Error")
             return False
         if not amount:
             print("No Amount Error")
             return False
 
-        transaction = Transaction(sender, receiver, amount, privateKey, publicKey)
-
+        transaction = Transaction(receiverKey, amount, publicKey, privateKey)
         transaction.signTransaction(privateKey, publicKey)
 
+        # If public key and private key match
         if transaction.isValidTransaction():
+            file = open("mempool.txt", "a")
+
+            file.write(str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "\n")
+            file.close()
             self.pendingTransactions.append(transaction)
             return True
         return False
@@ -99,8 +99,15 @@ class Blockchain (object):
                 newBlock.mineBlock(self.difficulty)
                 self.chain.append(newBlock)
             print("Mining Transactions Success!")
+            # remove all old pending transactions and add miner rewards to mempool
+            file = open("mempool.txt", "w")
+            file.truncate()
 
-            rewardGiver = Transaction("Dat Boi Rewards", miner, self.reward, None, None)
+            rewardGiver = Transaction(miner, self.reward, None, None)
+
+            file.write(str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n")
+            file.close()
+
             self.pendingTransactions = [rewardGiver]
         return True
 
