@@ -102,9 +102,11 @@ class Blockchain (object):
             # remove all old pending transactions and add miner rewards to mempool
             file = open("mempool.txt", "w")
             file.truncate()
+            file.close()
 
             rewardGiver = Transaction(miner, self.reward, None, None)
 
+            file = open("mempool.txt", "a")
             file.write(str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n")
             file.close()
 

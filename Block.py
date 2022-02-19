@@ -17,6 +17,7 @@ class Block (object):
         self.prev = ''
         self.nonse = 0
         self.hash = self.calculateHash()
+        self.recordBlock()
 
     def calculateHash(self):
 
@@ -64,3 +65,21 @@ class Block (object):
 
     def getHash(self):
         return self.hash
+
+    def recordBlock(self):
+        message = "-=-= START OF BLOCK =-=-" + "\n"
+        message += "Block #" + str(self.index) + "\n"
+        message += "Hash: " + self.getHash() + "\n"
+        message += "Prev: " + self.getPrev() + "\n"
+        message += "Transactions:" + "\n"
+        for transaction in self.getTransactions():
+            try:
+                message += ("    sender: " + str(transaction.getSender().publickey().export_key()) + "  receiver: " + str(transaction.getReceiver().publickey().export_key()) + "  amount: " + str(transaction.getAmount())) + "\n"
+            except (ValueError, AttributeError):
+                message += ("    sender: " + str(transaction.getSender()) + "  receiver: " + str(transaction.getReceiver().publickey().export_key()) + "  amount: " + str(transaction.getAmount())) + "\n"
+        message += "-=-= END OF BLOCK =-=-" + "\n"
+
+        file = open("blockchain.txt", "a")
+        file.write(message)
+        file.close()
+
