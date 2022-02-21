@@ -1,9 +1,9 @@
 from datetime import datetime
 import hashlib
-from Cryptodome.PublicKey import RSA
+from Crypto.PublicKey import RSA
 from base64 import b64decode, b64encode
-from Cryptodome.Hash import SHA256
-from Cryptodome.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+from Crypto.Signature import pkcs1_15
 
 
 class Transaction (object):
