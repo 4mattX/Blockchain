@@ -16,7 +16,6 @@ class Transaction (object):
         self.hash = self.calculateHash()
         self.signed = False
 
-
     # FIX LATER
     def signTransaction(self, privateKey, publicKey):
         if (self.hash != self.calculateHash()):

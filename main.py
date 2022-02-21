@@ -148,9 +148,6 @@ def simulateBlockchain():
                 privateKey = RSA.import_key(file.read())
 
             blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
-            file = open("TempMempool.txt", "r")
-            newTransaction = file.read()
-            file.close()
 
             print("")
             print("Added to pending transaction MEMPOOL")
@@ -187,18 +184,7 @@ def simulateBlockchain():
 if __name__ == '__main__':
     simulateBlockchain()
 
-# # API to send the single transaction record of located in TempMemepool and append it to another user's mempool
-# # realized that this method doesn't work the way I thought it would so ignore it for now
-# @app.post("/addPendingTransaction")
-# def APIaddPendingTransactionFile():
-#     file1 = open("TempMempool.txt", "r")
-#     file2 = open("mempool.txt", "a")
-#     file2.write(file1.read())
-#     file1.close()
-#     file2.close()
-#     return {"API add pending transaction processed."}
-
-#2nd version of the first one, except data is modular instead of file based, seems to work the best
+#sends a transaction object
 @app.post("/addPendingTransaction/{receiverKey}/{amount}/{publicKey}/{privateKey}")
 def APIaddPendingTransactionData(receiverKey: str, amount: float, publicKey: str):
     file = open("mempool.txt", "a")
@@ -207,13 +193,17 @@ def APIaddPendingTransactionData(receiverKey: str, amount: float, publicKey: str
     file.close()
     return {"API add pending transaction processed."}
 
-#3rd version of add pending transaction, this time just copy and paste entire TempMempool
-@app.post("/addPendingTransaction2/{TempMempool}")
-def APIaddpendingTransactionTemp(TempMempool: str):
+@app.post("/addPendingTransaction2/{transaction}")
+def APIaddPendingTransaction2(transaction: Transaction):
     file = open("mempool.txt", "a")
-    file.write(TempMempool)
+    file.write(
+        r"b'-----BEGIN PUBLIC KEY-----\n" + Transaction.receiverKey + r"\n-----END PUBLIC KEY-----'," + Transaction.amount + r",b'-----BEGIN PUBLIC KEY-----\n"
+        + Transaction.publicKey + r"\n----END PUBLIC KEY-----'")
     file.close()
     return {"API add pending transaction processed."}
+
+
+
 
 #shows the contents of TempMemPool
 @app.get("/getTempMemePool")
