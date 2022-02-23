@@ -5,9 +5,9 @@ import sys
 from Block import Block
 from Blockchain import Blockchain
 from Transaction import Transaction
-from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA256
-from Crypto.Signature import pkcs1_15
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Hash import SHA256
+from Cryptodome.Signature import pkcs1_15
 from fastapi import FastAPI
 import uvicorn
 from fastapi.responses import JSONResponse
@@ -42,13 +42,13 @@ def createTestBlockChain():
     blockChain = Blockchain()
 
     transactions = [];
-    block = Block(getRandomTransactions(), time(), 0)
+    block = Block(getRandomTransactions(), time(), 0, blockChain)
     blockChain.addBlock(block)
-    block = Block(getRandomTransactions(), time(), 1)
+    block = Block(getRandomTransactions(), time(), 1, blockChain)
     blockChain.addBlock(block)
-    block = Block(getRandomTransactions(), time(), 2)
+    block = Block(getRandomTransactions(), time(), 2, blockChain)
     blockChain.addBlock(block)
-    block = Block(getRandomTransactions(), time(), 3)
+    block = Block(getRandomTransactions(), time(), 3, blockChain)
     blockChain.addBlock(block)
 
     for block in blockChain.getChain():
@@ -129,7 +129,9 @@ def simulateBlockchain():
         print("3 - Print Pending Transactions")
         print("4 - Print Blockchain")
         print("5 - Generate Wallet Keys")
-        print("6 - End Program")
+        print("6 - Balance of Sender")
+        print("7 - Balance of Receiver")
+        print("8 - End Program")
         print("-------------------------------")
         value = input("-> ")
 
@@ -148,11 +150,6 @@ def simulateBlockchain():
                 privateKey = RSA.import_key(file.read())
 
             blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
-
-            print("")
-            print("Added to pending transaction MEMPOOL")
-            print("added to temporary pending transaction TEMPMEMPOOL")
-            print("")
 
         if (value == "2"):
             with open('miner/public.pem', "rb") as file:
@@ -179,7 +176,20 @@ def simulateBlockchain():
             print ("Check Files")
 
         if (value == "6"):
-            break
+            with open('sender/public.pem', "rb") as file:
+                senderKey = RSA.import_key(file.read())
+            balance = blockchain.getWalletBalance(senderKey)
+            print("")
+            print("Balance = " + str(balance))
+            print("")
+
+        if (value == "7"):
+            with open('receiver/public.pem', "rb") as file:
+                receiverKey = RSA.import_key(file.read())
+            balance = blockchain.getWalletBalance(receiverKey)
+            print("")
+            print("Balance = " + str(balance))
+            print("")
 
 if __name__ == '__main__':
     simulateBlockchain()

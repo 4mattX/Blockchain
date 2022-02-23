@@ -1,9 +1,9 @@
 from datetime import datetime
 import hashlib
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 from base64 import b64decode, b64encode
-from Crypto.Hash import SHA256
-from Crypto.Signature import pkcs1_15
+from Cryptodome.Hash import SHA256
+from Cryptodome.Signature import pkcs1_15
 
 
 class Transaction (object):
@@ -42,7 +42,6 @@ class Transaction (object):
             print("INVALID Transaction signature")
         return False
 
-
     def calculateHash(self):
         # Hash String Value that will be converted into a hash value
         inputString = str(self.publicKey) + str(self.receiverKey) + str(self.amount) + str(self.time)
@@ -51,24 +50,6 @@ class Transaction (object):
         hashValue = hashlib.sha256(inputString.encode('utf-8')).hexdigest()
 
         return hashValue
-
-    # def signTransaction(self, key, senderKey):
-    #     if (self.hash != self.calculateHash()):
-    #         print("!!! Invalid Transaction !!!")
-    #         return False
-    #
-    #     # Converting StringKeys into Byte Data Structure
-    #     byteKey = RSA.importKey(key.encode("ASCII"))
-    #     byteSenderKey = RSA.importKey(senderKey.encode("ASCII"))
-    #
-    #     if (byteKey != byteSenderKey):
-    #         print("Tampered Transaction Error")
-    #         return False
-    #
-    #     self.signed = True
-    #     print("Transaction Signed")
-    #     return True
-
 
     def isValidTransaction(self):
         if (self.hash != self.calculateHash()):

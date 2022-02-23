@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 
-from Block import Block
+from BlockChainProject.Block import Block
 from Transaction import Transaction
 
 class Blockchain (object):
@@ -32,11 +32,16 @@ class Blockchain (object):
         return keyPair
 
     def addFirstBlock(self):
+
+        if (len(self.chain) > 1):
+            return
+
         transactions = []
-        # transactions.append(Transaction('dat', 'boi', 420))
-        genesis = Block(transactions, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), 0)
+
+        genesis = Block(transactions, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), 0, self)
         genesis.prev = "N/A"
         self.chain.append(genesis)
+        genesis.recordBlock()
 
     def getLastBlock(self):
         return self.chain[-1]
@@ -84,7 +89,7 @@ class Blockchain (object):
 
     def minePendingTransactions(self, miner):
 
-        pendingLength = len(self.pendingTransactions);
+        pendingLength = len(self.pendingTransactions)
         if (pendingLength <= 0):
             print("There must be at least one transaction on block to mine")
             return False
@@ -97,11 +102,12 @@ class Blockchain (object):
 
                 transactionSlice = self.pendingTransactions[i:end]
 
-                newBlock = Block(transactionSlice, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), len(self.chain))
+                newBlock = Block(transactionSlice, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), len(self.chain), self)
 
                 hashValue = self.getLastBlock().getHash()
                 newBlock.prev = hashValue
                 newBlock.mineBlock(self.difficulty)
+                newBlock.recordBlock()
                 self.chain.append(newBlock)
             print("Mining Transactions Success!")
             # remove all old pending transactions and add miner rewards to mempool
@@ -118,3 +124,26 @@ class Blockchain (object):
             self.pendingTransactions = [rewardGiver]
         return True
 
+    def getWalletBalance(self, publicKey):
+
+        if (publicKey is None):
+            return 0
+
+        balance = 0
+
+        for block in self.chain:
+            for transaction in block.transactions:
+
+                if (transaction.getReceiver() is None):
+                    continue
+
+                if (transaction.getReceiver() == publicKey):
+                    balance += int(transaction.getAmount())
+
+                if (transaction.getSender() is None):
+                    continue
+
+                if (transaction.getSender() == publicKey):
+                    balance -= int(transaction.getAmount())
+
+        return balance

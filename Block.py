@@ -2,11 +2,15 @@ import hashlib
 import json
 from time import sleep
 
+from BlockChainProject import Blockchain
+from BlockChainProject.Wallet import Wallet
+
 
 class Block (object):
-    def __init__(self, transactions, time, index):
+    def __init__(self, transactions, time, index, blockchain):
         #record of transaction sender, receiver, amount transfered, and time of transaction processed
         self.transactions = transactions
+        self.blockchain = blockchain
 
         #time of this block's creation
         self.time = time
@@ -17,7 +21,6 @@ class Block (object):
         self.prev = ''
         self.nonse = 0
         self.hash = self.calculateHash()
-        self.recordBlock()
 
     def calculateHash(self):
 
@@ -46,10 +49,60 @@ class Block (object):
             print("Nonse: ", self.nonse)
             print("Hash Attempt: ", self.hash)
             print(("Hash We Want: ", hashPuzzle, "..."))
-            # sleep(0.8)
+
+        # Make sure each transaction is valid in the amount
+        # Makes a list of all wallets
+        wallets = []
+        invalidWallets = []
+
+        blockchain = self.blockchain
+
+        for transaction in self.transactions:
+            inWallets = False
+
+            for wallet in wallets:
+
+                if (transaction.getSender() is None):
+                    continue
+                if (wallet.getPublicKey() is None):
+                    continue
+
+                if (str(wallet.getPublicKey().publickey().export_key()) == str(transaction.getSender().publickey().export_key())):
+                    inWallets = True
+
+            if (inWallets == False):
+                newWallet = Wallet(transaction.getSender(), blockchain.getWalletBalance(transaction.getSender()))
+                wallets.append(newWallet)
+
+        for wallet in wallets:
+            for transaction in self.transactions:
+
+                if (transaction.getSender() is None):
+                    continue
+                if (wallet.getPublicKey() is None):
+                    continue
+
+                if (str(transaction.getSender().publickey().export_key()) == str(wallet.getPublicKey().publickey().export_key())):
+                    wallet.removeBalance(int(transaction.getAmount()))
+                    if (wallet.getBalance() < 0):
+                        invalidWallets.append(wallet)
+
+        for transaction in self.transactions:
+            for invalidWallet in invalidWallets:
+
+                if (transaction.getSender() is None):
+                    continue
+                if (wallet.getPublicKey() is None):
+                    continue
+
+                if (str(transaction.getSender().publickey().export_key()) == str(invalidWallet.getPublicKey().publickey().export_key())):
+                    self.transactions.remove(transaction)
+                    print("Wallet address with balance < 0 Found!")
+                    print(str(invalidWallet.getPublicKey().publickey().export_key()))
+
         print("")
         print("Block Mined! Nonse: " + str(self.getNonse()))
-        return True
+        return self
 
     def addTransaction(self, transaction):
         self.transactions.add(transaction)
