@@ -65,12 +65,12 @@ class Blockchain (object):
             print("No Amount Error")
             return False
 
-        transaction = Transaction(receiverKey, amount, publicKey, privateKey)
+        transaction = Transaction(receiverKey, amount, publicKey)
         transaction.signTransaction(privateKey, publicKey)
 
         # If public key and private key match
         if transaction.isValidTransaction():
-            file = open("mempool.txt", "a")
+            file = open("mempool.csv", "a")
 
             file.write(str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "\n")
             file.close()
@@ -111,13 +111,13 @@ class Blockchain (object):
                 self.chain.append(newBlock)
             print("Mining Transactions Success!")
             # remove all old pending transactions and add miner rewards to mempool
-            file = open("mempool.txt", "w")
+            file = open("mempool.csv", "w")
             file.truncate()
             file.close()
 
-            rewardGiver = Transaction(miner, self.reward, None, None)
+            rewardGiver = Transaction(miner, self.reward, None)
 
-            file = open("mempool.txt", "a")
+            file = open("mempool.csv", "a")
             file.write(str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n")
             file.close()
 

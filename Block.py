@@ -4,6 +4,10 @@ from time import sleep
 
 from BlockChainProject import Blockchain
 from BlockChainProject.Wallet import Wallet
+from Cryptodome.Hash import SHA256, SHA384
+from Cryptodome.Signature import pkcs1_15
+from Cryptodome import Signature
+from Cryptodome import Hash
 
 
 class Block (object):
@@ -59,6 +63,21 @@ class Block (object):
 
         for transaction in self.transactions:
             inWallets = False
+
+            # Checking signature of transaction
+            try:
+                verifier = Signature.pkcs1_15.new(transaction.getSender())
+                hash = Hash.SHA384.new()
+                hash.update(transaction.getSignature())
+                verifier.verify(hash, transaction.getSignature())
+                print("VALID SIGNATURE")
+            except ValueError:
+                print("BLOCK HERE -> " + str(transaction.getSignature()))
+                print("INVALID SIGNATURE")
+                continue
+
+            print("do we make it here?")
+
 
             for wallet in wallets:
 
@@ -132,7 +151,7 @@ class Block (object):
                 message += ("    sender: " + str(transaction.getSender()) + "  receiver: " + str(transaction.getReceiver().publickey().export_key()) + "  amount: " + str(transaction.getAmount())) + "\n"
         message += "-=-= END OF BLOCK =-=-" + "\n"
 
-        file = open("blockchain.txt", "a")
+        file = open("blockchain.csv", "a")
         file.write(message)
         file.close()
 

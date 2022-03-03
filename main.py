@@ -158,7 +158,7 @@ def simulateBlockchain():
             blockchain.minePendingTransactions(minerKey)
 
         if (value == "3"):
-            with open("mempool.txt", "rb") as file:
+            with open("mempool.csv", "rb") as file:
                 print(file.read())
 
 
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 #sends a transaction object
 @app.post("/addPendingTransaction/{receiverKey}/{amount}/{publicKey}/{privateKey}")
 def APIaddPendingTransactionData(receiverKey: str, amount: float, publicKey: str):
-    file = open("mempool.txt", "a")
+    file = open("mempool.csv", "a")
     file.write(r"b'-----BEGIN PUBLIC KEY-----\n"+receiverKey+r"\n-----END PUBLIC KEY-----',"+amount+r",b'-----BEGIN PUBLIC KEY-----\n"
                +publicKey+r"\n----END PUBLIC KEY-----'")
     file.close()
@@ -205,7 +205,7 @@ def APIaddPendingTransactionData(receiverKey: str, amount: float, publicKey: str
 
 @app.post("/addPendingTransaction2/{transaction}")
 def APIaddPendingTransaction2(transaction: Transaction):
-    file = open("mempool.txt", "a")
+    file = open("mempool.csv", "a")
     file.write(
         r"b'-----BEGIN PUBLIC KEY-----\n" + Transaction.receiverKey + r"\n-----END PUBLIC KEY-----'," + Transaction.amount + r",b'-----BEGIN PUBLIC KEY-----\n"
         + Transaction.publicKey + r"\n----END PUBLIC KEY-----'")
