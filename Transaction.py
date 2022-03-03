@@ -1,3 +1,4 @@
+import binascii
 from datetime import datetime
 import hashlib
 from Cryptodome.PublicKey import RSA
@@ -6,6 +7,7 @@ from Cryptodome.Hash import SHA256, SHA384
 from Cryptodome.Signature import pkcs1_15
 from Cryptodome import Signature
 from Cryptodome import Hash
+from Cryptodome.Signature.pkcs1_15 import PKCS115_SigScheme
 
 
 class Transaction (object):
@@ -39,11 +41,12 @@ class Transaction (object):
         # except (ValueError, TypeError):
         #     print("INVALID Transaction signature")
         # return False
+
         signer = Signature.pkcs1_15.new(privateKey)
-        signatureHash = Hash.SHA384.new()
+        signatureHash = Hash.SHA256.new()
+        # signatureHash.update(publicKey.publickey().export_key())
         signatureHash.update(publicKey.publickey().export_key())
         self.signature = signer.sign(signatureHash)
-        print("Transaction Here ->" + str(self.signature))
         self.signed = True
 
 

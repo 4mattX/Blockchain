@@ -1,6 +1,9 @@
 import hashlib
 import json
+from base64 import b64decode
 from time import sleep
+
+from Cryptodome.Signature.pkcs1_15 import PKCS115_SigScheme
 
 from BlockChainProject import Blockchain
 from BlockChainProject.Wallet import Wallet
@@ -65,19 +68,18 @@ class Block (object):
             inWallets = False
 
             # Checking signature of transaction
-            try:
-                verifier = Signature.pkcs1_15.new(transaction.getSender())
-                hash = Hash.SHA384.new()
-                hash.update(transaction.getSignature())
-                verifier.verify(hash, transaction.getSignature())
-                print("VALID SIGNATURE")
-            except ValueError:
-                print("BLOCK HERE -> " + str(transaction.getSignature()))
-                print("INVALID SIGNATURE")
-                continue
+            if (transaction.getSignature() != None):
+                try:
+                    verifier = Signature.pkcs1_15.new(transaction.getSender())
+                    hash = Hash.SHA256.new()
+                    hash.update(transaction.getSender().publickey().export_key())
+                    verifier.verify(hash, transaction.getSignature())
 
-            print("do we make it here?")
-
+                    print("VALID SIGNATURE")
+                except ValueError:
+                    # print("BLOCK HERE -> " + str(transaction.getSignature()))
+                    self.transactions.remove(transaction)
+                    continue
 
             for wallet in wallets:
 
@@ -103,6 +105,7 @@ class Block (object):
 
                 if (str(transaction.getSender().publickey().export_key()) == str(wallet.getPublicKey().publickey().export_key())):
                     wallet.removeBalance(int(transaction.getAmount()))
+
                     if (wallet.getBalance() < 0):
                         invalidWallets.append(wallet)
 
