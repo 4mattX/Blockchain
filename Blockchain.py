@@ -75,11 +75,6 @@ class Blockchain (object):
             file.write(str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "\n")
             file.close()
 
-            #brute force code to add a overwriting record of the latest transaction to be broadcasted
-            file = open("TempMempool.txt", "w")
-            file.write(str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "\n")
-            file.close()
-
             self.pendingTransactions.append(transaction)
             return True
         return False

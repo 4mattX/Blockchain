@@ -142,17 +142,15 @@ class Block (object):
         return self.hash
 
     def recordBlock(self):
-        message = "-=-= START OF BLOCK =-=-" + "\n"
-        message += "Block #" + str(self.index) + "\n"
-        message += "Hash: " + self.getHash() + "\n"
-        message += "Prev: " + self.getPrev() + "\n"
-        message += "Transactions:" + "\n"
+        message = "DB"
+        message += str(self.index)
+        message += self.getHash()
+        message += self.getPrev()
         for transaction in self.getTransactions():
             try:
-                message += ("    sender: " + str(transaction.getSender().publickey().export_key()) + "  receiver: " + str(transaction.getReceiver().publickey().export_key()) + "  amount: " + str(transaction.getAmount())) + "\n"
+                message += (str(transaction.getSender().publickey().export_key()) + "," + str(transaction.getReceiver().publickey().export_key()) + "," + str(transaction.getAmount())) + "\n"
             except (ValueError, AttributeError):
-                message += ("    sender: " + str(transaction.getSender()) + "  receiver: " + str(transaction.getReceiver().publickey().export_key()) + "  amount: " + str(transaction.getAmount())) + "\n"
-        message += "-=-= END OF BLOCK =-=-" + "\n"
+                message += (str(transaction.getSender()) + "," + str(transaction.getReceiver().publickey().export_key()) + "," + str(transaction.getAmount())) + "\n"
 
         file = open("blockchain.csv", "a")
         file.write(message)
