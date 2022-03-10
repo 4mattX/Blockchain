@@ -22,33 +22,11 @@ class Transaction (object):
 
     # FIX LATER
     def signTransaction(self, privateKey, publicKey):
-        # if (self.hash != self.calculateHash()):
-        #     print("INVALID Transaction")
-        #     return False
-        #
-        # newPrivateKey = privateKey
-        # newPublicKey = publicKey
-        #
-        # message = b'Verifier Message'
-        # h = SHA256.new(message)
-        # signature = pkcs1_15.new(newPrivateKey).sign(h)
-        #
-        # try:
-        #     pkcs1_15.new(newPublicKey).verify(h, signature)
-        #     print("Valid Transaction")
-        #     self.signed = True
-        #     return True
-        # except (ValueError, TypeError):
-        #     print("INVALID Transaction signature")
-        # return False
-
         signer = Signature.pkcs1_15.new(privateKey)
         signatureHash = Hash.SHA256.new()
-        # signatureHash.update(publicKey.publickey().export_key())
         signatureHash.update(publicKey.publickey().export_key())
         self.signature = signer.sign(signatureHash)
         self.signed = True
-
 
     def calculateHash(self):
         # Hash String Value that will be converted into a hash value
@@ -83,6 +61,18 @@ class Transaction (object):
     def getHash(self):
         return self.hash
 
+    def getTime(self):
+        return self.time
+
     def getSignature(self):
         return self.signature
+
+    def setSignature(self, signature):
+        self.signature = signature
+
+    def setDate(self, time):
+        self.time = time
+
+    def resetHash(self):
+        self.hash = self.calculateHash()
 

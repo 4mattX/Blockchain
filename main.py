@@ -120,7 +120,8 @@ def testValidTransaction():
     # blockchain.minePendingTransactions(publicKey)
 
 def simulateBlockchain():
-    blockchain = Blockchain()
+    blockchain = None
+    firstTransaction = True
 
     loop = True
     while (loop):
@@ -131,11 +132,17 @@ def simulateBlockchain():
         print("5 - Generate Wallet Keys")
         print("6 - Balance of Sender")
         print("7 - Balance of Receiver")
-        print("8 - End Program")
+        print("8 - Load Blockchain from file")
+        print("9 - Validate Blockchain")
         print("-------------------------------")
         value = input("-> ")
 
         if (value == "1"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                firstTransaction = False
+
             print("In the receiver directory place the correct Public Key")
             print("In the sender directory place both your Private and Public Key")
             amount = input("Amount -> ")
@@ -189,6 +196,24 @@ def simulateBlockchain():
             balance = blockchain.getWalletBalance(receiverKey)
             print("")
             print("Balance = " + str(balance))
+            print("")
+
+        if (value == "8"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                firstTransaction = False
+
+            blockchain.getBlockChainFromData()
+            print("Loaded Blockchain from data")
+            print("")
+
+        if (value == "9"):
+            print("")
+            if (blockchain.validateBlockchain()):
+                print("Valid Blockchain")
+            else:
+                print("Invalid Blockchain")
             print("")
 
 if __name__ == '__main__':

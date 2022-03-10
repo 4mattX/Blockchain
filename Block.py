@@ -142,15 +142,26 @@ class Block (object):
         return self.hash
 
     def recordBlock(self):
-        message = "DB"
-        message += str(self.index)
-        message += self.getHash()
-        message += self.getPrev()
+        message = "DB,"
+        message += str(self.index) + ","
+        message += str(self.getHash()) + ","
+        message += str(self.getPrev()) + ","
+        message += str(self.time) + ","
+        message += "\n"
         for transaction in self.getTransactions():
             try:
-                message += (str(transaction.getSender().publickey().export_key()) + "," + str(transaction.getReceiver().publickey().export_key()) + "," + str(transaction.getAmount())) + "\n"
+                message += (str(transaction.getSender().publickey().export_key()) + "," +
+                            str(transaction.getReceiver().publickey().export_key()) + "," +
+                            str(transaction.getAmount()) + "," +
+                            str(transaction.getSignature()) + "," +
+                            str(transaction.getTime())) + "," + "\n"
+            # Occurs when Miner Rewards are given
             except (ValueError, AttributeError):
-                message += (str(transaction.getSender()) + "," + str(transaction.getReceiver().publickey().export_key()) + "," + str(transaction.getAmount())) + "\n"
+                message += (str(transaction.getSender()) + "," +
+                            str(transaction.getReceiver().publickey().export_key()) + "," +
+                            str(transaction.getAmount()) + "," +
+                            str(transaction.getSignature()) + "," +
+                            str(transaction.getTime())) + "," + "\n"
 
         file = open("blockchain.csv", "a")
         file.write(message)

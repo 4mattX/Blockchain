@@ -4,6 +4,7 @@ from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Block import Block
 from Transaction import Transaction
+from typing import NamedTuple
 
 class Blockchain (object):
     def __init__(self):
@@ -142,3 +143,104 @@ class Blockchain (object):
                     balance -= int(transaction.getAmount())
 
         return balance
+
+    def validateBlockchain(self):
+
+        # hash = None
+        # index = 0
+        #
+        # for block in self.chain:
+        #     if (index == 0):
+        #         hash = block.calculateHash()
+        #         index += 1
+        #         continue
+        #     index += 1
+        #
+        #     print("Hash: " + str(hash))
+        #     print("PrevHash: " + str(block.getPrev()))
+        #     print("")
+        #
+        #     prevHash = block.getPrev()
+        #     if (hash != prevHash):
+        #         return False
+        #     hash = block.calculateHash()
+        return True
+
+    def getBlockChainFromData(self):
+        blockchainText = open(r"blockchain.csv", "r")
+        self.chain = []
+
+        blockchain = []
+
+        emptyBlock = None
+        transactions = []
+
+        newBlock = True
+
+        blockCounter = 0
+        transactionCounter = 0
+
+        while (blockchainText):
+            line = blockchainText.readline()
+            print("line " + line)
+            try:
+                if (line[0] == 'D'):
+                    transactions = []
+                    newBlock = True
+                    blockType = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    index = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    hash = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    prevHash = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    time = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    time += line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+
+                    emptyBlock = (blockType, datetime.strptime(time, '%m/%d/%Y %H:%M:%S'), int(index), hash, prevHash)
+
+                    blockCounter += 1
+
+                else:
+                    senderKey = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    receiverKey = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    amount = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    signature = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    time = line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+                    time += line.split(",", 1)[0]
+                    line = line.split(",", 1)[1]
+
+                    transaction = Transaction(receiverKey, int(amount), senderKey)
+                    transaction.setSignature(signature)
+                    transaction.setDate(datetime.strptime(time, '%m/%d/%Y %H:%M:%S'))
+                    transaction.resetHash()
+                    transactions.append(transaction)
+
+                if (newBlock):
+
+                    block = Block(transactions, emptyBlock[1], emptyBlock[2], self)
+                    self.addBlock(block)
+                    newBlock = False
+            except:
+                break
+
+
+class EmptyBlock(NamedTuple):
+    blockType = str
+    index = str
+    hash = str
+    prevHash = str
+
+
+
+
+
+
