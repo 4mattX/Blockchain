@@ -12,6 +12,8 @@ from Cryptodome.Signature.pkcs1_15 import PKCS115_SigScheme
 
 class Transaction (object):
     def __init__(self, receiverKey, amount, publicKey):
+        # self.receiverKey = receiverKey.decode("base64")
+        # self.publicKey = publicKey.decode("base64")
         self.receiverKey = receiverKey
         self.publicKey = publicKey
         self.amount = amount

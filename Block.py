@@ -1,5 +1,7 @@
+import base64
 import hashlib
 import json
+import pickle
 from base64 import b64decode
 from time import sleep
 
@@ -11,6 +13,7 @@ from Cryptodome.Hash import SHA256, SHA384
 from Cryptodome.Signature import pkcs1_15
 from Cryptodome import Signature
 from Cryptodome import Hash
+from Cryptodome.PublicKey import RSA
 
 
 class Block (object):
@@ -28,6 +31,7 @@ class Block (object):
         self.prev = ''
         self.nonse = 0
         self.hash = self.calculateHash()
+        self.mineHash = self.hash
 
     def calculateHash(self):
 
@@ -50,11 +54,11 @@ class Block (object):
         solutionString = map(str, solutionArray)
         hashPuzzle = ''.join(solutionString)
 
-        while self.hash[0:difficulty] != hashPuzzle:
+        while self.mineHash[0:difficulty] != hashPuzzle:
             self.nonse += 1
-            self.hash = self.calculateHash()
+            self.mineHash = self.calculateHash()
             print("Nonse: ", self.nonse)
-            print("Hash Attempt: ", self.hash)
+            print("Hash Attempt: ", self.mineHash)
             print(("Hash We Want: ", hashPuzzle, "..."))
 
         # Make sure each transaction is valid in the amount
@@ -77,7 +81,6 @@ class Block (object):
 
                     print("VALID SIGNATURE")
                 except ValueError:
-                    # print("BLOCK HERE -> " + str(transaction.getSignature()))
                     self.transactions.remove(transaction)
                     continue
 
@@ -142,28 +145,58 @@ class Block (object):
         return self.hash
 
     def recordBlock(self):
-        message = "DB,"
-        message += str(self.index) + ","
-        message += str(self.getHash()) + ","
-        message += str(self.getPrev()) + ","
-        message += str(self.time) + ","
-        message += "\n"
-        for transaction in self.getTransactions():
-            try:
-                message += (str(transaction.getSender().publickey().export_key()) + "," +
-                            str(transaction.getReceiver().publickey().export_key()) + "," +
-                            str(transaction.getAmount()) + "," +
-                            str(transaction.getSignature()) + "," +
-                            str(transaction.getTime())) + "," + "\n"
-            # Occurs when Miner Rewards are given
-            except (ValueError, AttributeError):
-                message += (str(transaction.getSender()) + "," +
-                            str(transaction.getReceiver().publickey().export_key()) + "," +
-                            str(transaction.getAmount()) + "," +
-                            str(transaction.getSignature()) + "," +
-                            str(transaction.getTime())) + "," + "\n"
+        fileName = "blockchain/block_" + str(self.index) + ".block"
 
-        file = open("blockchain.csv", "a")
-        file.write(message)
-        file.close()
+        # Must Serialize all transactions first
+        serialTransactions = []
+        for transaction in self.transactions:
+            try:
+                transaction.publicKey = transaction.publicKey.publickey().export_key()
+                transaction.receiverKey = transaction.receiverKey.publickey().export_key()
+            except AttributeError:
+                transaction.publicKey = ""
+                transaction.receiverKey = transaction.receiverKey.publickey().export_key()
+                serialTransactions.append(transaction)
+                continue
+            serialTransactions.append(transaction)
+
+        emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash, self.mineHash)
+
+        filehandler = open(fileName, 'wb')
+        pickle.dump(emptyBlock, filehandler)
+        filehandler.close()
+
+        # After Serialization and recording must un-serialize
+        for transaction in self.transactions:
+            try:
+                transaction.publicKey = RSA.import_key(transaction.publicKey)
+                transaction.receiverKey = RSA.import_key(transaction.receiverKey)
+            except:
+                transaction.publicKey = None
+                transaction.receiverKey = RSA.import_key(transaction.receiverKey)
+
+        # message = "DB,"
+        # message += str(self.index) + ","
+        # message += str(self.getHash()) + ","
+        # message += str(self.getPrev()) + ","
+        # message += str(self.time) + ","
+        # message += "\n"
+        # for transaction in self.getTransactions():
+        #     try:
+        #         message += (str(transaction.getSender().publickey().export_key()) + "," +
+        #                     str(transaction.getReceiver().publickey().export_key()) + "," +
+        #                     str(transaction.getAmount()) + "," +
+        #                     str(transaction.getSignature()) + "," +
+        #                     str(transaction.getTime())) + "," + "\n"
+        #     # Occurs when Miner Rewards are given
+        #     except (ValueError, AttributeError):
+        #         message += (str(transaction.getSender()) + "," +
+        #                     str(transaction.getReceiver().publickey().export_key()) + "," +
+        #                     str(transaction.getAmount()) + "," +
+        #                     str(transaction.getSignature()) + "," +
+        #                     str(transaction.getTime())) + "," + "\n"
+        #
+        # file = open("blockchain.csv", "a")
+        # file.write(message)
+        # file.close()
 

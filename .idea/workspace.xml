@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d44fb407-f90d-4b40-85a6-3f7f7d4a3565" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Block.py" beforeDir="false" afterPath="$PROJECT_DIR$/Block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Blockchain.py" beforeDir="false" afterPath="$PROJECT_DIR$/Blockchain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Transaction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Transaction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blockchain.txt" beforeDir="false" afterPath="$PROJECT_DIR$/blockchain.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mempool.txt" beforeDir="false" afterPath="$PROJECT_DIR$/mempool.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sender/private.pem" beforeDir="false" afterPath="$PROJECT_DIR$/sender/private.pem" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2_23_2022_8_57_AM_[Changes]/shelved.patch" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +70,7 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\4manm\AppData\Local\Programs\Python\Python38\python.exe" />
+      <option name="SDK_HOME" value="C:\Users\4manm\AppData\Local\Programs\Python\Python38-32\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -112,6 +107,7 @@
       <workItem from="1645381556893" duration="1070000" />
       <workItem from="1645462048945" duration="53000" />
       <workItem from="1645628252035" duration="1203000" />
+      <workItem from="1647277948011" duration="63000" />
     </task>
     <task id="LOCAL-00001" summary="First Commit, added main.py&#10;&#10;- 4mattX">
       <created>1641947120201</created>

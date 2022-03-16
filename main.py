@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, time
 from random import randint
 import sys
@@ -8,15 +9,10 @@ from Transaction import Transaction
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Hash import SHA256
 from Cryptodome.Signature import pkcs1_15
-from fastapi import FastAPI
 import uvicorn
 from fastapi.responses import JSONResponse
 
-app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"Home Page"}
 
 def createTestBlock():
     transactions = [Transaction("Matthew0", "Thuan0", 420),
@@ -141,6 +137,7 @@ def simulateBlockchain():
 
             if (firstTransaction):
                 blockchain = Blockchain()
+                blockchain.addFirstBlock()
                 firstTransaction = False
 
             print("In the receiver directory place the correct Public Key")
@@ -156,20 +153,39 @@ def simulateBlockchain():
             with open('sender/private.pem', "rb") as file:
                 privateKey = RSA.import_key(file.read())
 
+
             blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
 
         if (value == "2"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             with open('miner/public.pem', "rb") as file:
                 minerKey = RSA.import_key(file.read())
 
             blockchain.minePendingTransactions(minerKey)
 
         if (value == "3"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             with open("mempool.csv", "rb") as file:
                 print(file.read())
 
 
         if (value == "4"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             for block in blockchain.getChain():
                 print("Hash -> " + block.getHash())
                 print("Prev -> " + block.getPrev())
@@ -179,10 +195,21 @@ def simulateBlockchain():
                 print("-----------------------------------------------------------------------------")
 
         if (value == "5"):
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             keyPair = blockchain.generateKeys()
             print ("Check Files")
 
         if (value == "6"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             with open('sender/public.pem', "rb") as file:
                 senderKey = RSA.import_key(file.read())
             balance = blockchain.getWalletBalance(senderKey)
@@ -191,6 +218,12 @@ def simulateBlockchain():
             print("")
 
         if (value == "7"):
+
+            if (firstTransaction):
+                blockchain = Blockchain()
+                blockchain.addFirstBlock()
+                firstTransaction = False
+
             with open('receiver/public.pem', "rb") as file:
                 receiverKey = RSA.import_key(file.read())
             balance = blockchain.getWalletBalance(receiverKey)
@@ -202,6 +235,7 @@ def simulateBlockchain():
 
             if (firstTransaction):
                 blockchain = Blockchain()
+                blockchain.addFirstBlock()
                 firstTransaction = False
 
             blockchain.getBlockChainFromData()
@@ -218,39 +252,3 @@ def simulateBlockchain():
 
 if __name__ == '__main__':
     simulateBlockchain()
-
-#sends a transaction object
-@app.post("/addPendingTransaction/{receiverKey}/{amount}/{publicKey}/{privateKey}")
-def APIaddPendingTransactionData(receiverKey: str, amount: float, publicKey: str):
-    file = open("mempool.csv", "a")
-    file.write(r"b'-----BEGIN PUBLIC KEY-----\n"+receiverKey+r"\n-----END PUBLIC KEY-----',"+amount+r",b'-----BEGIN PUBLIC KEY-----\n"
-               +publicKey+r"\n----END PUBLIC KEY-----'")
-    file.close()
-    return {"API add pending transaction processed."}
-
-@app.post("/addPendingTransaction2/{transaction}")
-def APIaddPendingTransaction2(transaction: Transaction):
-    file = open("mempool.csv", "a")
-    file.write(
-        r"b'-----BEGIN PUBLIC KEY-----\n" + Transaction.receiverKey + r"\n-----END PUBLIC KEY-----'," + Transaction.amount + r",b'-----BEGIN PUBLIC KEY-----\n"
-        + Transaction.publicKey + r"\n----END PUBLIC KEY-----'")
-    file.close()
-    return {"API add pending transaction processed."}
-
-
-
-
-#shows the contents of TempMemPool
-@app.get("/getTempMemePool")
-def getTempMemePool():
-    file = open("TempMempool.txt", "r")
-    return file.read()
-
-# @app.post("/getNewBlock/")
-# def APIgetNewBlock():
-
-
-
-uvicorn.run(app)
-
-
