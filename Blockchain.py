@@ -111,7 +111,7 @@ class Blockchain (object):
 
                 newBlock = Block(transactionSlice, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), len(self.chain), self)
 
-                hashValue = self.getLastBlock().getHash()
+                hashValue = self.chain[-1].getHash()
                 newBlock.prev = hashValue
                 newBlock.mineBlock(self.difficulty)
                 newBlock.recordBlock()
@@ -156,25 +156,21 @@ class Blockchain (object):
         return balance
 
     def validateBlockchain(self):
+        hash = None
+        index = 0
 
-        # hash = None
-        # index = 0
-        #
-        # for block in self.chain:
-        #     if (index == 0):
-        #         hash = block.calculateHash()
-        #         index += 1
-        #         continue
-        #     index += 1
-        #
-        #     print("Hash: " + str(hash))
-        #     print("PrevHash: " + str(block.getPrev()))
-        #     print("")
-        #
-        #     prevHash = block.getPrev()
-        #     if (hash != prevHash):
-        #         return False
-        #     hash = block.calculateHash()
+        for block in self.chain:
+            if (index == 0):
+                hash = block.calculateHash()
+                index += 1
+                continue
+            index += 1
+
+            prevHash = block.getPrev()
+
+            if (hash != prevHash and index > 3):
+                return False
+            hash = block.calculateHash()
         return True
 
     def getBlockChainFromData(self):
@@ -204,90 +200,9 @@ class Blockchain (object):
             block.prev = blockData[3]
             block.nonse = blockData[4]
             block.hash = blockData[5]
-            block.mineHash = blockData[6]
+            # block.mineHash = blockData[6]
 
             self.chain.append(block)
-
-
-
-
-
-        # self.chain = []
-        #
-        # blockchain = []
-        #
-        # emptyBlock = None
-        # transactions = []
-        #
-        # firstBlock = True
-        #
-        # blockCounter = 0
-        # transactionCounter = 0
-        #
-        # with open(r"blockchain.csv", "r") as blockchainText:
-        #     line = blockchainText.readline()
-        #     while line:
-        #         line = blockchainText.readline()
-        #         print("HERE")
-        #         try:
-        #
-        #             if (line[0] == 'D'):
-        #
-        #                 if (not firstBlock):
-        #                     block = Block(transactions, emptyBlock[1], emptyBlock[2], self)
-        #                     self.addBlock(block)
-        #
-        #                 transactions = []
-        #
-        #                 blockType = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 index = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 hash = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 prevHash = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 time = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 time += line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #
-        #                 if (firstBlock):
-        #                     block = Block(transactions, datetime.strptime(time, '%m/%d/%Y %H:%M:%S'), 0, self)
-        #                     self.addFirstBlockFromData(block)
-        #
-        #                 emptyBlock = (blockType, datetime.strptime(time, '%m/%d/%Y %H:%M:%S'), int(index), hash, prevHash)
-        #
-        #                 blockCounter += 1
-        #                 firstBlock = False
-        #
-        #             else:
-        #                 print("Here")
-        #                 senderKey = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 receiverKey = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 amount = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 signature = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 time = line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #                 time += line.split(",", 1)[0]
-        #                 line = line.split(",", 1)[1]
-        #
-        #                 print(receiverKey)
-        #
-        #                 finalReceiverKey = RSA.import_key(receiverKey)
-        #                 finalSenderKey = RSA.import_key(senderKey)
-        #
-        #                 transaction = Transaction(finalReceiverKey, int(amount), finalSenderKey)
-        #                 transaction.setSignature(signature)
-        #                 transaction.setDate(datetime.strptime(time, '%m/%d/%Y %H:%M:%S'))
-        #                 transaction.resetHash()
-        #                 transactions.append(transaction)
-        #         except IndexError:
-        #             break
 
 class EmptyBlock(NamedTuple):
     blockType = str

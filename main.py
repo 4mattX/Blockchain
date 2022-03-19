@@ -235,7 +235,6 @@ def simulateBlockchain():
 
             if (firstTransaction):
                 blockchain = Blockchain()
-                blockchain.addFirstBlock()
                 firstTransaction = False
 
             blockchain.getBlockChainFromData()

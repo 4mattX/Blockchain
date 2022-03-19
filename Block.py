@@ -31,7 +31,6 @@ class Block (object):
         self.prev = ''
         self.nonse = 0
         self.hash = self.calculateHash()
-        self.mineHash = self.hash
 
     def calculateHash(self):
 
@@ -54,11 +53,11 @@ class Block (object):
         solutionString = map(str, solutionArray)
         hashPuzzle = ''.join(solutionString)
 
-        while self.mineHash[0:difficulty] != hashPuzzle:
+        while self.hash[0:difficulty] != hashPuzzle:
             self.nonse += 1
-            self.mineHash = self.calculateHash()
+            self.hash = self.calculateHash()
             print("Nonse: ", self.nonse)
-            print("Hash Attempt: ", self.mineHash)
+            print("Hash Attempt: ", self.hash)
             print(("Hash We Want: ", hashPuzzle, "..."))
 
         # Make sure each transaction is valid in the amount
@@ -160,7 +159,7 @@ class Block (object):
                 continue
             serialTransactions.append(transaction)
 
-        emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash, self.mineHash)
+        emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash)
 
         filehandler = open(fileName, 'wb')
         pickle.dump(emptyBlock, filehandler)
