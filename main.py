@@ -4,14 +4,53 @@ from random import randint
 import sys
 
 from Block import Block
+from BlockChainProject.BlockchainApp import BlockchainApp
 from Blockchain import Blockchain
 from Transaction import Transaction
 from Cryptodome.PublicKey import RSA
+from tkinter import *
+
 from Cryptodome.Hash import SHA256
 from Cryptodome.Signature import pkcs1_15
 import uvicorn
 from fastapi.responses import JSONResponse
 
+# Tkinter initialize
+# window = Tk()
+# window.title("Blockchain")
+#
+# window.minsize(1000, 600)
+# BUTTON_WIDTH = 15
+# BUTTON_HEIGHT = 2
+# padX = 30
+# padY = 15
+#
+# # Button Creation
+# sendButton = Button(window, text="Send", width=BUTTON_WIDTH, height=BUTTON_HEIGHT)
+# sendButton.grid(row=0, column=0, sticky=W, pady=padY, padx=padX)
+#
+# friendButton = Button(window, text="Add Friend", width=BUTTON_WIDTH, height=BUTTON_HEIGHT)
+# friendButton.grid(row=1, column=0, sticky=W, pady=padY, padx=padX)
+#
+# mineButton = Button(window, text="Mine", width=BUTTON_WIDTH, height=BUTTON_HEIGHT)
+# mineButton.grid(row=2, column=0, sticky=W, pady=padY, padx=padX)
+#
+# viewChainButton = Button(window, text="View Chain", width=BUTTON_WIDTH, height=BUTTON_HEIGHT)
+# viewChainButton.grid(row=3, column=0, sticky=W, pady=padY, padx=padX)
+#
+# transactionsButton = Button(window, text="Transactions", width=BUTTON_WIDTH, height=BUTTON_HEIGHT)
+# transactionsButton.grid(row=4, column=0, sticky=W, pady=padY, padx=padX)
+#
+# # Right Panel Creation
+# rightPanel = PanedWindow(orient='horizontal')
+# rightPanel.grid(row=0, column=1, pady=100, padx=100)
+
+
+
+
+
+
+# window.mainloop()
 
 
 def createTestBlock():
@@ -249,5 +288,12 @@ def simulateBlockchain():
                 print("Invalid Blockchain")
             print("")
 
+
+
 if __name__ == '__main__':
-    simulateBlockchain()
+    # simulateBlockchain()
+    root = Tk()
+    root.geometry("1000x600+300+300")
+    app = BlockchainApp()
+    app.configure(bg='#23272a')
+    root.mainloop()
