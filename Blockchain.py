@@ -12,9 +12,11 @@ class Blockchain (object):
     def __init__(self):
         self.chain = []
         self.pendingTransactions = []
-        self.difficulty = 3
+        self.difficulty = 4
         self.blockSize = 10
         self.reward = 20
+
+        self.miningNonse = 0
 
     # Returns private and public key pair
     def generateKeys(self):

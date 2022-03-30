@@ -55,6 +55,7 @@ class Block (object):
 
         while self.hash[0:difficulty] != hashPuzzle:
             self.nonse += 1
+            self.blockchain.miningNonse = self.nonse
             self.hash = self.calculateHash()
             print("Nonse: ", self.nonse)
             print("Hash Attempt: ", self.hash)
