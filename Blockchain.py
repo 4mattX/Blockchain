@@ -1,4 +1,5 @@
 import pickle
+import threading
 from datetime import datetime
 
 from Cryptodome.PublicKey import RSA
@@ -12,9 +13,11 @@ class Blockchain (object):
     def __init__(self):
         self.chain = []
         self.pendingTransactions = []
-        self.difficulty = 4
+        self.difficulty = 5
         self.blockSize = 10
         self.reward = 20
+
+        self.killMine = False
 
         self.miningNonse = 0
 
@@ -115,7 +118,11 @@ class Blockchain (object):
 
                 hashValue = self.chain[-1].getHash()
                 newBlock.prev = hashValue
-                newBlock.mineBlock(self.difficulty)
+                newBlock.mineBlock()
+
+                if (self.killMine):
+                    return
+
                 newBlock.recordBlock()
                 self.chain.append(newBlock)
             print("Mining Transactions Success!")

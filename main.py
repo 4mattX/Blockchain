@@ -287,13 +287,3 @@ def simulateBlockchain():
             else:
                 print("Invalid Blockchain")
             print("")
-
-
-
-if __name__ == '__main__':
-    # simulateBlockchain()
-    root = Tk()
-    root.geometry("1000x600+300+300")
-    app = BlockchainApp()
-    app.configure(bg='#23272a')
-    root.mainloop()

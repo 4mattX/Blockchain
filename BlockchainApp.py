@@ -1,4 +1,7 @@
+import math
 import pathlib
+import threading
+import traceback
 from tkinter import Tk, Text, BOTH, W, N, E, S, Frame, Button, PhotoImage, Button, Label, Canvas, Text
 import tkinter.font as font
 import os
@@ -8,6 +11,9 @@ from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Blockchain import Blockchain
 
+balance = 0
+balanceLabel = None
+blockchain = Blockchain()
 
 class HoverButton(Button):
     def __init__(self, master, **kw):
@@ -26,28 +32,80 @@ class BlockchainApp(Frame):
 
     def __init__(self):
         super().__init__()
-        self.blockchain = Blockchain()
 
         self.mainCanvas = None
         self.miniCanvas = None
         self.notifications = []
         self.lineCounter = 0
-        self.balance = 0
         self.frameColor = '#2c2f33'
         self.selectedFriend = ""
         self.transactionAmount = 0
-        
+        self.balanceLabel = Label(self, text="balance: ", background='#23272a', foreground='white')
+        self.nonseLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
+        self.hashLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
+        self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", foreground='white', activeforeground='white', relief='flat', overrelief='flat')
+        self.nonse = 0
+        self.hashRate = 0
+        self.inMiner = False
+        self.hashTimer = 100
+        self.isMining = False
+
+
+
+        self.thread = threading.Thread(target=self.mineBlock, name="mineThread")
+        self.thread.daemon = True
+
         self.miniCanvasComponents = []
 
         # Establish Blockchain here
-        self.blockchain.addFirstBlock()
+        blockchain.addFirstBlock()
+        blockchain.app = self
 
         self.initUI()
 
-    def displayBlockchain(self):
-        self.mainCanvas.create_text(300, 300, text='Hello World')
+    def updateSideBar(self):
+        # self.balanceLabel.destroy()
+        buttonFont = font.Font(family='Uni Sans', weight='bold', size=16)
+        with open('sender/public.pem', "rb") as file:
+            senderKey = RSA.import_key(file.read())
+        balanceString = "Balance: " + str(blockchain.getWalletBalance(senderKey))
+        self.balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
+
+    def updateMinerScreen(self):
+        if (not self.inMiner):
+            return
+
+        lotsOfSpace = "                                                                                                 "
+
+        nonseString = "Nonse: " + str(self.nonse)
+        labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
+        statusFont = font.Font(family='Uni Sans', weight='bold', size=24)
+        Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
+        self.nonseLabel = Label(self.mainCanvas, text=nonseString, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
+
+        hashString = "Hash Rate: " + str(self.truncate(self.hashRate / 10, 1)) + " h/ms"
+        Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
+        Label(self.mainCanvas, text=hashString, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
+
+        amountTransactions = str(len(blockchain.pendingTransactions))
+        amountTransactions = "Amount Transactions: " + amountTransactions
+        Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
+
+        blockNum = str(len(blockchain.chain))
+        blockNum = "Block Index: " + blockNum
+        Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
+
+        if (self.isMining):
+            Label(self.mainCanvas, text="Mining                            ", background=self.frameColor, foreground='lime', font=statusFont).place(x=190, y=16)
+        else:
+            Label(self.mainCanvas, text="Suspended", background=self.frameColor, foreground='red', font=statusFont).place(x=190, y=16)
+
+    def truncate(self, number, digits) -> float:
+        stepper = 10.0 ** digits
+        return math.trunc(stepper * number) / stepper
 
     def sendFriend(self):
+        self.inMiner = False
         self.resetMainCanvas()
 
         friendsNames = []
@@ -106,13 +164,13 @@ class BlockchainApp(Frame):
             with open('friends/' + self.selectedFriend + ".pem", "rb") as file:
                 receiverKey = RSA.import_key(file.read())
 
-            self.blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
+            blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
             self.addLine("lime@$>> pending transaction created")
             self.addLine("lime@$>> " + str(amount) + " to " + self.selectedFriend)
         except:
+            traceback.print_exc()
             self.addLine("red@$>> Error: Creating Transaction")
 
-        
     def selectFriend(self, friend):
         self.selectedFriend = friend
         self.addLine("white@$>> selected: " + friend)
@@ -138,16 +196,130 @@ class BlockchainApp(Frame):
         friendsDirectory = "friends\README.txt"
         absoluteDirectory = os.path.join(directory, friendsDirectory)
         subprocess.Popen(r'explorer /select,' + friendsDirectory)
-        
-    def displayTransactions(self):
+
+    def displayPersonalTransactions(self):
+        self.inMiner = False
         self.resetMainCanvas()
 
         labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
-        tranFont = font.Font(family='Uni Sans', weight='bold', size=6)
-        Label(self.mainCanvas, text='Pending Transactions: ', background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=20)
+        tranFont = font.Font(family='Uni Sans', weight='bold', size=10)
+        Label(self.mainCanvas, text='Your Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
-        with open("mempool.csv", "rb") as file:
-            Label(self.mainCanvas, text=file.read(), background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
+        transactionsText = ""
+        for block in blockchain.chain:
+            for transaction in block.getTransactions():
+
+                amount = "Amount: "
+                sender = "Sender: "
+                receiver = "Receiver: "
+
+                amount += str(transaction.getAmount())
+
+                friendsDirectory = os.listdir('friends')
+                for friend in friendsDirectory:
+                    if (str(friend).__contains__("README")):
+                        friendsDirectory.remove(friend)
+
+                for friend in friendsDirectory:
+                    name = friend.split(".", 1)[0]
+                    with open('friends/' + name + ".pem", "rb") as file:
+                        receiverKey = RSA.import_key(file.read())
+                    if (transaction.getReceiver() == receiverKey):
+                        receiver += name
+                    try:
+                        if (transaction.getSender() == receiverKey):
+                            sender += name
+                    except:
+                        sender = "Sender: Miner Rewards"
+
+                with open('sender/public.pem') as file:
+                    key = RSA.import_key(file.read())
+
+                try:
+                    if (key == transaction.getSender()):
+                        sender += "You"
+                except:
+                    sender = "Sender: Miner Rewards"
+
+                if (key == transaction.getReceiver()):
+                    receiver += "You"
+
+                if (len(receiver) < 11):
+                    receiver += str(transaction.getReceiver())[:8] + "..."
+
+                if (len(sender) < 9):
+                    try:
+                        sender += str(transaction.getSender())[:8] + "..."
+                    except:
+                        sender = "Sender: Miner Rewards"
+
+
+                transactionsText += amount + " " + sender + " " + receiver + "\n"
+
+        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
+
+    def displayTransactions(self):
+        self.inMiner = False
+        self.resetMainCanvas()
+
+        labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
+        tranFont = font.Font(family='Uni Sans', weight='bold', size=10)
+        Label(self.mainCanvas, text='Pending Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
+
+        transactionsText = ""
+
+        for transaction in blockchain.pendingTransactions:
+            amount = "Amount: "
+            sender = "Sender: "
+            receiver = "Receiver: "
+
+            amount += str(transaction.getAmount())
+
+            friendsDirectory = os.listdir('friends')
+            for friend in friendsDirectory:
+                if (str(friend).__contains__("README")):
+                    friendsDirectory.remove(friend)
+
+            for friend in friendsDirectory:
+                name = friend.split(".", 1)[0]
+                with open('friends/' + name + ".pem", "rb") as file:
+                    receiverKey = RSA.import_key(file.read())
+                if (transaction.getReceiver() == receiverKey):
+                    receiver += name
+                try:
+                    if (transaction.getSender() == receiverKey):
+                        sender += name
+                except:
+                    sender = "Sender: Miner Rewards"
+
+            with open('sender/public.pem') as file:
+                key = RSA.import_key(file.read())
+
+            try:
+                if (key == transaction.getSender()):
+                    sender += "You"
+            except:
+                sender = "Sender: Miner Rewards"
+
+            if (key == transaction.getReceiver()):
+                receiver += "You"
+
+            if (len(receiver) < 11):
+                receiver += str(transaction.getReceiver())[:8] + "..."
+
+            if (len(sender) < 9):
+                try:
+                    sender += str(transaction.getSender())[:8] + "..."
+                except:
+                    sender = "Sender: Miner Rewards"
+
+
+            transactionsText += amount + " " + sender + " " + receiver + "\n"
+
+        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
+
+        # with open("mempool.csv", "rb") as file:
+        #     Label(self.mainCanvas, text=file.read(), background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
 
     def resetMainCanvas(self):
         width = self.master.winfo_width()
@@ -157,6 +329,7 @@ class BlockchainApp(Frame):
         self.mainCanvas.place(x=265, y=0)
 
     def mineBlockchain(self):
+        self.inMiner = True
         self.resetMainCanvas()
         labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
         statusFont = font.Font(family='Uni Sans', weight='bold', size=20)
@@ -168,32 +341,73 @@ class BlockchainApp(Frame):
         BUTTON_WIDTH = 50
         BUTTON_HEIGHT = 5
 
+        # blockNum = str(len(blockchain.chain))
+        # blockNum = "Block Index: " + blockNum
+        # Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
+        # amountTransactions = str(len(blockchain.pendingTransactions))
+
         mineStatus = "Mine Status: "
         hashRate = "Hash Rate: "
-        blockNum = "Block Index: "
-        nonse = "Nonse: "
-        amountTransactions = "Amount Transactions: "
+        nonse = "Nonse: " + str(self.nonse)
+        # amountTransactions = "Amount Transactions: " + amountTransactions
+        # Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
+
 
         Label(self.mainCanvas, text=mineStatus, background=self.frameColor, foreground='white', font=statusFont).place(x=20, y=20)
-        Label(self.mainCanvas, text=hashRate, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
-        Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
-        Label(self.mainCanvas, text=nonse, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
-        Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
+        # Label(self.mainCanvas, text=hashRate, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
+        # Label(self.mainCanvas, text=nonse, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
 
-        HoverButton(self.mainCanvas, text='Begin Mining', width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.mineBlock()).place(x=60, y=400)
+        self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
+    def intermediateMine(self):
+
+        self.isMining = not self.isMining
+
+        BUTTON_WIDTH = 50
+        iconColor = '#2c2f33'
+        iconActiveColor = '#60666e'
+        buttonFont = font.Font(family='Uni Sans', size=16)
+
+        if (self.isMining):
+            blockchain.killMine = False
+            self.miningButton = HoverButton(self.mainCanvas, text="Stop Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
+            try:
+                self.thread.join()
+            except:
+                print("First Mining")
+            self.thread = threading.Thread(target=self.mineBlock, name="mineThread")
+            self.thread.daemon = True
+            self.thread.start()
+        else:
+            blockchain.killMine = True
+            self.nonse = 0
+            self.miningButton = HoverButton(self.mainCanvas, text="Start Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
+
+
+    # @jit(target="cuda")
     def mineBlock(self):
+
+        BUTTON_WIDTH = 50
+        iconColor = '#2c2f33'
+        iconActiveColor = '#60666e'
+        buttonFont = font.Font(family='Uni Sans', size=16)
+
         with open('miner/public.pem', "rb") as file:
             minerKey = RSA.import_key(file.read())
 
-        if (self.blockchain.minePendingTransactions(minerKey)):
+        if (blockchain.minePendingTransactions(minerKey)):
             self.addLine("lime@$>> BLOCK MINED!")
+            self.isMining = False
+            self.miningButton = HoverButton(self.mainCanvas, text="Start Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
         else:
-            self.addLine("red@$>> There must be at least one pending transaction to mine")
+            if (blockchain.killMine):
+                self.addLine("red@$>> Mining Suspended")
+            else:
+                self.addLine("red@$>> There must be at least one pending transaction to mine")
 
     def initUI(self):
 
-        BUTTON_WIDTH = 16
+        BUTTON_WIDTH = 17
         BUTTON_HEIGHT = 5
 
         self.master.title("Blockchain")
@@ -221,8 +435,8 @@ class BlockchainApp(Frame):
         sendButton = Button(self, text="Send", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.sendFriend())
         addFriendButton = Button(text="Add Friend", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.openFriendsFolder())
         mineButton = Button(text="Mine", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.mineBlockchain())
-        viewChainButton = Button(text="View Chain", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont)
-        viewTransactionsButton = Button(text="View Transactions", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.displayTransactions())
+        viewChainButton = Button(text="Your Transactions", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.displayPersonalTransactions())
+        viewTransactionsButton = Button(text="Pending Transactions", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.displayTransactions())
 
         buttons.append(sendButton)
         buttons.append(addFriendButton)
@@ -237,7 +451,33 @@ class BlockchainApp(Frame):
             counter += 1
 
         # Labels for balance
-        balanceString = "Balance: " + str(self.balance)
+        balanceString = "Balance: " + str(balance)
         nodeString = "   Nodes: "
-        balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
+        # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
+        # balanceLabel.place(x=20, y=420)
         nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=460)
+
+if __name__ == '__main__':
+    # simulateBlockchain()
+    root = Tk()
+    root.geometry("1000x600+300+300")
+    app = BlockchainApp()
+    app.configure(bg='#23272a')
+
+    def update():
+        # with open('sender/public.pem', "rb") as file:
+        #     senderKey = RSA.import_key(file.read())
+        # balance = blockchain.getWalletBalance(senderKey)
+        # balanceLabel.config(text=str(balance))
+
+        app.updateSideBar()
+        app.updateMinerScreen()
+        app.hashTimer += 100
+        app.hashRate = 0
+
+        # if (app.thread.is_alive() and app.isMining == False):
+        #     app.thread.join()
+        root.after(100, update)
+    update()
+
+    root.mainloop()

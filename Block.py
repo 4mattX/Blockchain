@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import pickle
+import time
 from base64 import b64decode
 from time import sleep
 
@@ -14,6 +15,7 @@ from Cryptodome.Signature import pkcs1_15
 from Cryptodome import Signature
 from Cryptodome import Hash
 from Cryptodome.PublicKey import RSA
+from numba import jit, cuda
 
 
 class Block (object):
@@ -32,6 +34,7 @@ class Block (object):
         self.nonse = 0
         self.hash = self.calculateHash()
 
+
     def calculateHash(self):
 
         transactionsHash = ''
@@ -45,7 +48,11 @@ class Block (object):
 
         return hashlib.sha256(encodedHash).hexdigest()
 
-    def mineBlock(self, difficulty):
+
+    def mineBlock(self):
+        appRef = self.blockchain.app
+        difficulty = self.blockchain.difficulty
+
         solutionArray = []
         for i in range (0, difficulty):
             solutionArray.append(i)
@@ -54,15 +61,29 @@ class Block (object):
         hashPuzzle = ''.join(solutionString)
 
         while self.hash[0:difficulty] != hashPuzzle:
+
+            if (self.blockchain.killMine):
+                return
+
             self.nonse += 1
-            self.blockchain.miningNonse = self.nonse
+
+            # if (self.nonse % 100 == 0):
+            self.blockchain.app.nonse = self.nonse
+            self.blockchain.app.hashRate += 1
+                # appRef.mineBlockchain()
+
+            # if (self.nonse % 100 == 0):
+            #     print(self.blockchain.app.nonse)
+            #     appRef.mineBlockchain()
+
             self.hash = self.calculateHash()
-            print("Nonse: ", self.nonse)
-            print("Hash Attempt: ", self.hash)
-            print(("Hash We Want: ", hashPuzzle, "..."))
+            # print("Nonse: ", self.nonse)
+            # print("Hash Attempt: ", self.hash)
+            # print(("Hash We Want: ", hashPuzzle, "..."))
 
         # Make sure each transaction is valid in the amount
         # Makes a list of all wallets
+
         wallets = []
         invalidWallets = []
 
@@ -121,9 +142,14 @@ class Block (object):
                     continue
 
                 if (str(transaction.getSender().publickey().export_key()) == str(invalidWallet.getPublicKey().publickey().export_key())):
-                    self.transactions.remove(transaction)
-                    print("Wallet address with balance < 0 Found!")
-                    print(str(invalidWallet.getPublicKey().publickey().export_key()))
+                    try:
+                        self.transactions.remove(transaction)
+                        print("Wallet address with balance < 0 Found!")
+                        print(str(invalidWallet.getPublicKey().publickey().export_key()))
+                        continue
+                    except:
+                        continue
+
 
         print("")
         print("Block Mined! Nonse: " + str(self.getNonse()))
