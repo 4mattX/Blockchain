@@ -10,6 +10,7 @@ import subprocess
 from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Blockchain import Blockchain
+from BlockChainProject.SettingsApp import SettingsApp
 
 balance = 0
 balanceLabel = None
@@ -201,8 +202,8 @@ class BlockchainApp(Frame):
         self.inMiner = False
         self.resetMainCanvas()
 
-        labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
-        tranFont = font.Font(family='Uni Sans', weight='bold', size=10)
+        labelFont = font.Font(family='Uni Sans', weight='bold', size=18)
+        tranFont = font.Font(family='Uni Sans', weight='bold', size=12)
         Label(self.mainCanvas, text='Your Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
         transactionsText = ""
@@ -256,14 +257,14 @@ class BlockchainApp(Frame):
 
                 transactionsText += amount + " " + sender + " " + receiver + "\n"
 
-        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
+        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='#adadad', font=tranFont).place(x=40, y=60)
 
     def displayTransactions(self):
         self.inMiner = False
         self.resetMainCanvas()
 
-        labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
-        tranFont = font.Font(family='Uni Sans', weight='bold', size=10)
+        labelFont = font.Font(family='Uni Sans', weight='bold', size=18)
+        tranFont = font.Font(family='Uni Sans', weight='bold', size=12)
         Label(self.mainCanvas, text='Pending Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
         transactionsText = ""
@@ -316,7 +317,7 @@ class BlockchainApp(Frame):
 
             transactionsText += amount + " " + sender + " " + receiver + "\n"
 
-        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
+        Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='#adadad', font=tranFont).place(x=40, y=60)
 
         # with open("mempool.csv", "rb") as file:
         #     Label(self.mainCanvas, text=file.read(), background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
@@ -358,6 +359,22 @@ class BlockchainApp(Frame):
         # Label(self.mainCanvas, text=nonse, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
 
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
+
+    def openSettings(self):
+        settingsRoot = Tk()
+        settingsRoot.geometry("500x300+300+300")
+        # settings = SettingsApp()
+        settingsRoot.configure(bg='#23272a')
+
+        settingsRoot.title("Settings")
+
+        width = 150
+        height = 300
+        frameColor = '#2c2f33'
+
+        canvas = Canvas(settingsRoot, background=frameColor, width=width, height=height, highlightthickness=0).place(x=0, y=0)
+
+        settingsRoot.mainloop()
 
     def intermediateMine(self):
 
@@ -447,15 +464,18 @@ class BlockchainApp(Frame):
         counter = 0
         for button in buttons:
             yPlace = counter * (height / 8)
-            button.place(x=20, y=yPlace + 20)
+            button.place(x=17, y=yPlace + 20)
             counter += 1
 
         # Labels for balance
         balanceString = "Balance: " + str(balance)
-        nodeString = "   Nodes: "
+        nodeString = "Nodes: "
         # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
         # balanceLabel.place(x=20, y=420)
         nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=460)
+        
+        # Settings Button
+        settingsButton = Button(text="Settings", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.openSettings()).place(x=17, y=550)
 
 if __name__ == '__main__':
     # simulateBlockchain()
