@@ -50,7 +50,6 @@ class Block (object):
 
 
     def mineBlock(self):
-        appRef = self.blockchain.app
         difficulty = self.blockchain.difficulty
 
         solutionArray = []
@@ -83,6 +82,8 @@ class Block (object):
 
         # Make sure each transaction is valid in the amount
         # Makes a list of all wallets
+
+
 
         wallets = []
         invalidWallets = []
@@ -170,6 +171,15 @@ class Block (object):
     def getHash(self):
         return self.hash
 
+    def sendBlock(self):
+        blockPickled = open (("blockchain/block_" + str(self.index) + ".block"), "rb")
+        blockData = pickle.load(blockPickled)
+
+        self.blockchain.getClient().disconnect()
+        self.blockchain.getClient().setUsername(str(self.index))
+        self.blockchain.getClient().createConnection()
+        self.blockchain.getClient().sendMessage(pickle.dumps(blockData))
+
     def recordBlock(self):
         fileName = "blockchain/block_" + str(self.index) + ".block"
 
@@ -200,29 +210,4 @@ class Block (object):
             except:
                 transaction.publicKey = None
                 transaction.receiverKey = RSA.import_key(transaction.receiverKey)
-
-        # message = "DB,"
-        # message += str(self.index) + ","
-        # message += str(self.getHash()) + ","
-        # message += str(self.getPrev()) + ","
-        # message += str(self.time) + ","
-        # message += "\n"
-        # for transaction in self.getTransactions():
-        #     try:
-        #         message += (str(transaction.getSender().publickey().export_key()) + "," +
-        #                     str(transaction.getReceiver().publickey().export_key()) + "," +
-        #                     str(transaction.getAmount()) + "," +
-        #                     str(transaction.getSignature()) + "," +
-        #                     str(transaction.getTime())) + "," + "\n"
-        #     # Occurs when Miner Rewards are given
-        #     except (ValueError, AttributeError):
-        #         message += (str(transaction.getSender()) + "," +
-        #                     str(transaction.getReceiver().publickey().export_key()) + "," +
-        #                     str(transaction.getAmount()) + "," +
-        #                     str(transaction.getSignature()) + "," +
-        #                     str(transaction.getTime())) + "," + "\n"
-        #
-        # file = open("blockchain.csv", "a")
-        # file.write(message)
-        # file.close()
-
+        self.sendBlock()

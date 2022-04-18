@@ -11,6 +11,7 @@ from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Blockchain import Blockchain
 from BlockChainProject.SettingsApp import SettingsApp
+from BlockChainProject.client import Client
 
 balance = 0
 balanceLabel = None
@@ -42,6 +43,7 @@ class BlockchainApp(Frame):
         self.selectedFriend = ""
         self.transactionAmount = 0
         self.balanceLabel = Label(self, text="balance: ", background='#23272a', foreground='white')
+        self.blocksLabel = Label(self, text="balance: ", background='#23272a', foreground='white')
         self.nonseLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
         self.hashLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", foreground='white', activeforeground='white', relief='flat', overrelief='flat')
@@ -51,6 +53,7 @@ class BlockchainApp(Frame):
         self.hashTimer = 100
         self.isMining = False
 
+        self.client = None
 
 
         self.thread = threading.Thread(target=self.mineBlock, name="mineThread")
@@ -59,10 +62,20 @@ class BlockchainApp(Frame):
         self.miniCanvasComponents = []
 
         # Establish Blockchain here
-        blockchain.addFirstBlock()
+        directory = os.listdir("blockchain")
+        if (len(directory) == 0):
+            blockchain.addFirstBlock()
+        else:
+            blockchain.getBlockChainFromData()
+
         blockchain.app = self
 
+        print(str(blockchain.app))
+
         self.initUI()
+
+    def addClient(self, client):
+        self.client = client
 
     def updateSideBar(self):
         # self.balanceLabel.destroy()
@@ -71,6 +84,9 @@ class BlockchainApp(Frame):
             senderKey = RSA.import_key(file.read())
         balanceString = "Balance: " + str(blockchain.getWalletBalance(senderKey))
         self.balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
+
+        blocksString = "Blocks: " + str(len(blockchain.chain))
+        self.blocksLabel = Label(self, text=blocksString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=460)
 
     def updateMinerScreen(self):
         if (not self.inMiner):
@@ -472,7 +488,7 @@ class BlockchainApp(Frame):
         nodeString = "Nodes: "
         # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
         # balanceLabel.place(x=20, y=420)
-        nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=460)
+        nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
         
         # Settings Button
         settingsButton = Button(text="Settings", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.openSettings()).place(x=17, y=550)
@@ -484,6 +500,14 @@ if __name__ == '__main__':
     app = BlockchainApp()
     app.configure(bg='#23272a')
 
+    # client = Client("Node")
+    # client.createConnection()
+    #
+    # blockchain.addClient(client)
+
+    blockchain.getClient().startThread()
+
+
     def update():
         # with open('sender/public.pem', "rb") as file:
         #     senderKey = RSA.import_key(file.read())
@@ -494,6 +518,9 @@ if __name__ == '__main__':
         app.updateMinerScreen()
         app.hashTimer += 100
         app.hashRate = 0
+
+        # client.receiveMessage()
+        # blockchain.getClient().receiveMessage()
 
         # if (app.thread.is_alive() and app.isMining == False):
         #     app.thread.join()

@@ -5,6 +5,7 @@ from datetime import datetime
 from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Block import Block
+from BlockChainProject.client import Client
 from Transaction import Transaction
 from typing import NamedTuple
 import pathlib
@@ -16,10 +17,18 @@ class Blockchain (object):
         self.difficulty = 5
         self.blockSize = 10
         self.reward = 20
+        self.client = Client("Node", self)
+        self.client.createConnection()
 
         self.killMine = False
 
         self.miningNonse = 0
+
+    def addClient(self, client):
+        self.client = client
+
+    def getClient(self):
+        return self.client
 
     # Returns private and public key pair
     def generateKeys(self):
@@ -39,7 +48,6 @@ class Blockchain (object):
         return keyPair
 
     def addFirstBlock(self):
-
         if (len(self.chain) > 1):
             return
 
