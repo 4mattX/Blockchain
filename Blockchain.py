@@ -99,7 +99,7 @@ class Blockchain (object):
             file = open("mempool.csv", "a")
 
             # pendingData = str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "," + str(transaction.getSignature()) + "\n"
-            pendingData = str(receiverKey.publickey().export_key().decode("utf-8") ) + "," + str(amount) + "," + str(publicKey.publickey().export_key().decode("utf-8")) + "," + str(binascii.hexlify(transaction.getSignature()).decode('ascii'))
+            pendingData = str(receiverKey.publickey().export_key().decode("utf-8") ) + "," + str(amount) + "," + str(publicKey.publickey().export_key().decode("utf-8")) + "," + str(binascii.hexlify(transaction.getSignature()).decode('ascii').strip())
 
             file.write(pendingData + "\n")
             file.close()

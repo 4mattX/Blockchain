@@ -87,7 +87,7 @@ class Client(object):
                         transaction.publicKey = RSA.import_key(transaction.publicKey)
                         transaction.receiverKey = RSA.import_key(transaction.receiverKey)
 
-                        transaction.setSignature(binascii.unhexlify(signature))
+                        transaction.setSignature(binascii.unhexlify(signature.strip()))
 
                         if (transaction.isValidTransaction()):
                             self.blockchain.pendingTransactions.append(transaction)
@@ -114,6 +114,9 @@ class Client(object):
                     #
                     # if (len(self.blockchain.chain) < int(username)):
                     #     return
+
+                    if (len(self.blockchain.chain) != int(username)):
+                        return
 
                     transactions = newBlock[0]
                     for transaction in transactions:
