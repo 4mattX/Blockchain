@@ -1,3 +1,4 @@
+import binascii
 import pickle
 import threading
 from datetime import datetime
@@ -97,10 +98,21 @@ class Blockchain (object):
         if transaction.isValidTransaction():
             file = open("mempool.csv", "a")
 
-            file.write(str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "\n")
+            # pendingData = str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "," + str(transaction.getSignature()) + "\n"
+            pendingData = str(receiverKey.publickey().export_key().decode("utf-8") ) + "," + str(amount) + "," + str(publicKey.publickey().export_key().decode("utf-8")) + "," + str(binascii.hexlify(transaction.getSignature()).decode('ascii'))
+
+            file.write(pendingData + "\n")
             file.close()
 
+            self.getClient().disconnect()
+            self.getClient().setUsername("mempool")
+            self.getClient().createConnection()
+            self.getClient().sendPending(pendingData)
+
             self.pendingTransactions.append(transaction)
+
+            print("SUCCESS SENDING PENDING TRANSACTION")
+
             return True
         return False
 
@@ -141,9 +153,15 @@ class Blockchain (object):
 
             rewardGiver = Transaction(miner, self.reward, None)
 
+            pendingData = str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n";
             file = open("mempool.csv", "a")
-            file.write(str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n")
+            file.write(pendingData)
             file.close()
+
+            self.getClient().disconnect()
+            self.getClient().setUsername("mempool")
+            self.getClient().createConnection()
+            self.getClient().sendPending(pendingData)
 
             self.pendingTransactions = [rewardGiver]
         return True

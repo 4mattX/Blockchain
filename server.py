@@ -5,8 +5,8 @@ if __name__ == '__main__':
 
     HEADER_LENGTH = 10
 
-    IP = "10.10.10.17"
-    PORT = 1263
+    IP = ""
+    PORT = 1024
 
     # Create a socket
     # socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX

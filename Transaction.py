@@ -16,6 +16,7 @@ class Transaction (object):
         # self.publicKey = publicKey.decode("base64")
         self.receiverKey = receiverKey
         self.publicKey = publicKey
+
         self.amount = amount
         self.signature = None
         self.time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -40,13 +41,21 @@ class Transaction (object):
         return hashValue
 
     def isValidTransaction(self):
-        if (self.hash != self.calculateHash()):
-            return False
+        # if (self.hash != self.calculateHash()):
+        #     return False
+        #
+        # if(self.publicKey == self.receiverKey):
+        #     return False
+        #
+        # if not self.signed:
+        #     return False
 
-        if(self.publicKey == self.receiverKey):
-            return False
-
-        if not self.signed:
+        try:
+            signer = Signature.pkcs1_15.new(self.publicKey)
+            signatureHash = Hash.SHA256.new()
+            signatureHash.update(self.publicKey.publickey().export_key())
+            signer.verify(signatureHash, self.signature)
+        except ValueError:
             return False
 
         return True

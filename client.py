@@ -1,4 +1,6 @@
 import ast
+import base64
+import binascii
 import io
 import pickle
 import socket
@@ -8,13 +10,15 @@ import sys
 import threading
 import traceback
 
+
 from Cryptodome.PublicKey import RSA
 
 from BlockChainProject.Block import Block
+from BlockChainProject.Transaction import Transaction
 
 HEADER_LENGTH = 10
-IP = "10.10.10.17"
-PORT = 1263
+IP = "173.255.193.198"
+PORT = 1024
 
 class Client(object):
     def __init__(self, username, blockchain):
@@ -39,8 +43,14 @@ class Client(object):
         self.client_socket.close()
 
     def sendMessage(self, message):
-        print("Sending Message")
+        print("Sending Block")
         # message = message.encode('utf-8')
+        message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
+        self.client_socket.send(message_header + message)
+
+    def sendPending(self, message):
+        print("Sending Pending Transaction")
+        message = message.encode('utf-8')
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
         self.client_socket.send(message_header + message)
 
@@ -60,6 +70,29 @@ class Client(object):
 
                     # Receive and decode username
                     username = self.client_socket.recv(username_length).decode('utf-8')
+
+                    # Check if message is pending transaction
+                    if (username == "mempool"):
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        message = self.client_socket.recv(message_length).decode('utf-8')
+
+                        receiverKey = message.split(",")[0]
+                        amount = message.split(",")[1]
+                        senderKey = message.split(",")[2]
+                        signature = message.split(",")[3]
+
+                        transaction = Transaction(receiverKey, amount, senderKey)
+
+                        transaction.publicKey = RSA.import_key(transaction.publicKey)
+                        transaction.receiverKey = RSA.import_key(transaction.receiverKey)
+
+                        transaction.setSignature(binascii.unhexlify(signature))
+
+                        if (transaction.isValidTransaction()):
+                            self.blockchain.pendingTransactions.append(transaction)
+
+                        continue
 
                     # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
                     message_header = self.client_socket.recv(HEADER_LENGTH)
