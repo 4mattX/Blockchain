@@ -159,12 +159,7 @@ class Client(object):
 
                         self.blockchain.pendingTransactions.append(transaction)
 
-                    if ("request" in username):
-                        print("username...")
-                        print(str(username))
-                        blockNum = str(username).split("_")[1]
-                        blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
-                        blockData = pickle.load(blockPickled)
+                    if (username == "updateRequest"):
 
                         message = ""
                         isMore = True
@@ -179,13 +174,14 @@ class Client(object):
                                 break
                         message.strip()
 
-                        if (len(self.blockchain.getChain()) < int(blockNum)):
-                            continue
+                        for x in range(len(self.blockchain.chain)):
+                            blockPickled = open (("blockchain/block_" + str(self.index) + ".block"), "rb")
+                            blockData = pickle.load(blockPickled)
 
-                        self.disconnect()
-                        self.setUsername(str(blockNum) + "of" + len(self.blockchain.getChain()))
-                        self.createConnection()
-                        self.sendMessage(pickle.dumps(blockData))
+                            self.disconnect()
+                            self.setUsername(str(self.index))
+                            self.createConnection()
+                            self.sendMessage(pickle.dumps(blockData))
 
                     # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
                     message_header = self.client_socket.recv(HEADER_LENGTH)
@@ -239,35 +235,33 @@ class Client(object):
                     # print("Block Loaded Success -> " + str(block.index))
 
                     # Occurs when the receiver has most up to date blockchain
-                    print("user " + str(username))
-                    print("len" + str(len(self.blockchain.chain)))
-
-                    indexBlock = int(str(username).split("of")[0]) + 1
-                    maxBlock = str(username).split("of")[1]
-
-                    print("here1")
-
-                    if (int(indexBlock) == len(self.blockchain.chain)):
+                    if (int(username) == len(self.blockchain.chain)):
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
                         continue
 
-                    # Occurs when receiver is out of date
-                    # Receiver will then request for their next block
-                    if (int(indexBlock) > int(maxBlock)):
-                        print("here2")
-                        self.disconnect()
-                        self.setUsername("request_" + str(len(self.blockchain.chain)))
-                        self.createConnection()
-                        self.sendMessage(b"MESSAGE")
+                    if (int(username) == len(self.blockchain.chain) - 1):
+                        self.blockchain.addBlock(block)
+                        self.blockchain.pendingTransactions.clear()
+                        print("updating blockchain")
                         continue
 
-                    if (int(username) < len(self.blockchain.chain)):
-                        print("here3")
-                        print("Sender has less blocks than receiver")
-                        continue
-                    print("here4")
+                    # # Occurs when receiver is out of date
+                    # # Receiver will then request for their next block
+                    # if (int(indexBlock) > len(self.blockchain.chain)):
+                    #     print("here2")
+                    #     self.disconnect()
+                    #     self.setUsername("request_" + str(len(self.blockchain.chain)))
+                    #     self.createConnection()
+                    #     self.sendMessage(b"MESSAGE")
+                    #     continue
+                    #
+                    # if (int(username) < len(self.blockchain.chain)):
+                    #     print("here3")
+                    #     print("Sender has less blocks than receiver")
+                    #     continue
+                    # print("here4")
 
 
 

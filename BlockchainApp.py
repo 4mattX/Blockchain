@@ -388,21 +388,11 @@ class BlockchainApp(Frame):
 
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
-    def openSettings(self):
-        settingsRoot = Tk()
-        settingsRoot.geometry("500x300+300+300")
-        # settings = SettingsApp()
-        settingsRoot.configure(bg='#23272a')
-
-        settingsRoot.title("Settings")
-
-        width = 150
-        height = 300
-        frameColor = '#2c2f33'
-
-        canvas = Canvas(settingsRoot, background=frameColor, width=width, height=height, highlightthickness=0).place(x=0, y=0)
-
-        settingsRoot.mainloop()
+    def updateBlockchain(self):
+        self.blockchain.getClient().disconnect()
+        self.blockchain.getClient().setUsername("updateRequest")
+        self.blockchain.getClient().createConnection()
+        self.blockchain.getClient().sendMessage(b'message')
 
     def intermediateMine(self):
 
@@ -503,8 +493,8 @@ class BlockchainApp(Frame):
         # balanceLabel.place(x=20, y=420)
         nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
         
-        # Settings Button
-        settingsButton = Button(text="Settings", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.openSettings()).place(x=17, y=550)
+        # Update Button
+        updateButton = Button(text="Update Blockchain", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.updateBlockchain()).place(x=17, y=550)
 
 if __name__ == '__main__':
     # simulateBlockchain()

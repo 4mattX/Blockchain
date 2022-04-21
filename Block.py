@@ -185,7 +185,7 @@ class Block (object):
         blockData = pickle.load(blockPickled)
 
         self.blockchain.getClient().disconnect()
-        self.blockchain.getClient().setUsername(str(self.index) + "of" + str(self.index))
+        self.blockchain.getClient().setUsername(str(self.index))
         self.blockchain.getClient().createConnection()
         self.blockchain.getClient().sendMessage(pickle.dumps(blockData))
 
