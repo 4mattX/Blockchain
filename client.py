@@ -20,8 +20,8 @@ HEADER_LENGTH = 10
 IP = "173.255.193.198"
 PORT = 1024
 
-SEND_BUF_SIZE = 4096
-RECV_BUF_SIZE = 4096
+SEND_BUF_SIZE = 256
+RECV_BUF_SIZE = 256
 
 class Client(object):
     def __init__(self, username, blockchain):
@@ -118,7 +118,7 @@ class Client(object):
                         transaction.receiverKey = RSA.import_key(transaction.receiverKey)
 
                         try:
-                            transaction.setSignature(binascii.unhexlify(signature))
+                            transaction.setSignature(binascii.unhexlify(signature.strip()))
                         except binascii.Error:
                             print("BYTE DATA CORRUPTED")
                             # transaction.setSignature(binascii.unhexlify(signature.strip()))
@@ -160,8 +160,10 @@ class Client(object):
                         self.blockchain.pendingTransactions.append(transaction)
 
                     if ("request" in username):
-                        blockNum = username.split("_")[1]
-                        blockPickled = open (("blockchain/block_" + str(self.index) + ".block"), "rb")
+                        print("username...")
+                        print(str(username))
+                        blockNum = str(username).split("_")[1]
+                        blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
 
                         message = ""
@@ -240,7 +242,7 @@ class Client(object):
                     print("user " + str(username))
                     print("len" + str(len(self.blockchain.chain)))
 
-                    indexBlock = str(username).split("of")[0]
+                    indexBlock = int(str(username).split("of")[0]) + 1
                     maxBlock = str(username).split("of")[1]
 
                     print("here1")
@@ -253,12 +255,12 @@ class Client(object):
 
                     # Occurs when receiver is out of date
                     # Receiver will then request for their next block
-                    if (int(indexBlock) > len(self.blockchain.chain)):
+                    if (int(indexBlock) > int(maxBlock)):
                         print("here2")
                         self.disconnect()
-                        self.setUsername("request_" + str(indexBlock + 1))
+                        self.setUsername("request_" + str(indexBlock))
                         self.createConnection()
-                        self.sendMessage("request")
+                        self.sendMessage(b"MESSAGE")
                         continue
 
                     if (int(username) < len(self.blockchain.chain)):
@@ -269,7 +271,7 @@ class Client(object):
 
 
 
-            except IOError as e:
+            except Exception as e:
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))

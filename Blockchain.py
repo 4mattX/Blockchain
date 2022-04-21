@@ -134,7 +134,7 @@ class Blockchain (object):
     def minePendingTransactions(self, miner):
 
         pendingLength = len(self.pendingTransactions)
-        if (pendingLength <= 1):
+        if (pendingLength <= 0):
             print("There must be at least one transaction on block to mine")
             return False
         else:
@@ -170,6 +170,7 @@ class Blockchain (object):
             file.write(pendingData)
             file.close()
 
+            time.sleep(1)
             self.getClient().disconnect()
             self.getClient().setUsername("minerReward")
             self.getClient().createConnection()
