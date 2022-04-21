@@ -1,3 +1,4 @@
+import gc
 import math
 import pathlib
 import threading
@@ -82,6 +83,7 @@ class BlockchainApp(Frame):
         buttonFont = font.Font(family='Uni Sans', weight='bold', size=16)
         with open('sender/public.pem', "rb") as file:
             senderKey = RSA.import_key(file.read())
+            file.close()
         balanceString = "Balance: " + str(blockchain.getWalletBalance(senderKey))
         self.balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
 
@@ -91,6 +93,9 @@ class BlockchainApp(Frame):
     def updateMinerScreen(self):
         if (not self.inMiner):
             return
+
+        # implement this every 10 seconds or so
+        # self.resetMainCanvas()
 
         lotsOfSpace = "                                                                                                 "
 
@@ -174,12 +179,15 @@ class BlockchainApp(Frame):
 
             with open('sender/public.pem', "rb") as file:
                 publicKey = RSA.import_key(file.read())
+                file.close()
 
             with open('sender/private.pem', "rb") as file:
                 privateKey = RSA.import_key(file.read())
+                file.close()
 
             with open('friends/' + self.selectedFriend + ".pem", "rb") as file:
                 receiverKey = RSA.import_key(file.read())
+                file.close()
 
             blockchain.addTransaction(receiverKey, amount, publicKey, privateKey)
             self.addLine("lime@$>> pending transaction created")
@@ -241,6 +249,7 @@ class BlockchainApp(Frame):
                     name = friend.split(".", 1)[0]
                     with open('friends/' + name + ".pem", "rb") as file:
                         receiverKey = RSA.import_key(file.read())
+                        file.close()
                     if (transaction.getReceiver() == receiverKey):
                         receiver += name
                     try:
@@ -251,6 +260,7 @@ class BlockchainApp(Frame):
 
                 with open('sender/public.pem') as file:
                     key = RSA.import_key(file.read())
+                    file.close()
 
                 try:
                     if (key == transaction.getSender()):
@@ -301,6 +311,7 @@ class BlockchainApp(Frame):
                 name = friend.split(".", 1)[0]
                 with open('friends/' + name + ".pem", "rb") as file:
                     receiverKey = RSA.import_key(file.read())
+                    file.close()
                 if (transaction.getReceiver() == receiverKey):
                     receiver += name
                 try:
@@ -311,6 +322,7 @@ class BlockchainApp(Frame):
 
             with open('sender/public.pem') as file:
                 key = RSA.import_key(file.read())
+                file.close()
 
             try:
                 if (key == transaction.getSender()):
@@ -425,8 +437,9 @@ class BlockchainApp(Frame):
         iconActiveColor = '#60666e'
         buttonFont = font.Font(family='Uni Sans', size=16)
 
-        with open('miner/public.pem', "rb") as file:
+        with open('sender/public.pem', "rb") as file:
             minerKey = RSA.import_key(file.read())
+            file.close()
 
         if (blockchain.minePendingTransactions(minerKey)):
             self.addLine("lime@$>> BLOCK MINED!")
@@ -509,15 +522,17 @@ if __name__ == '__main__':
 
 
     def update():
-        # with open('sender/public.pem', "rb") as file:
-        #     senderKey = RSA.import_key(file.read())
-        # balance = blockchain.getWalletBalance(senderKey)
-        # balanceLabel.config(text=str(balance))
-
         app.updateSideBar()
         app.updateMinerScreen()
         app.hashTimer += 100
         app.hashRate = 0
+
+        if (not app.isMining):
+            try:
+                app.thread.join()
+            except:
+                gc.collect()
+        gc.collect()
 
         # client.receiveMessage()
         # blockchain.getClient().receiveMessage()

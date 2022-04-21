@@ -1,6 +1,7 @@
 import binascii
 import pickle
 import threading
+import time
 from datetime import datetime
 
 from Cryptodome.PublicKey import RSA
@@ -37,10 +38,12 @@ class Blockchain (object):
         privateKey = key.exportKey()
         scanner = open("generate/private.pem", "wb")
         scanner.write(privateKey)
+        scanner.close()
 
         publicKey = key.publickey().export_key()
         scanner = open("generate/public.pem", "wb")
         scanner.write(publicKey)
+        scanner.close()
 
         keyPair = []
         keyPair.append(privateKey)
@@ -55,6 +58,11 @@ class Blockchain (object):
         transactions = []
 
         genesis = Block(transactions, datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), 0, self)
+
+        with open('sender/public.pem', 'rb') as file:
+            genesis.miner = file.read()
+            file.close()
+
         genesis.prev = "N/A"
         self.chain.append(genesis)
         genesis.recordBlock()
@@ -99,7 +107,10 @@ class Blockchain (object):
             file = open("mempool.csv", "a")
 
             # pendingData = str(receiverKey.publickey().export_key()) + "," + str(amount) + "," + str(publicKey.publickey().export_key()) + "," + str(transaction.getSignature()) + "\n"
-            pendingData = str(receiverKey.publickey().export_key().decode("utf-8") ) + "," + str(amount) + "," + str(publicKey.publickey().export_key().decode("utf-8")) + "," + str(binascii.hexlify(transaction.getSignature()).decode('ascii').strip())
+
+            print("Blockchain Signature")
+            print(binascii.hexlify(transaction.getSignature()).decode('ascii'))
+            pendingData = str(receiverKey.publickey().export_key().decode("utf-8") ) + "," + str(amount) + "," + str(publicKey.publickey().export_key().decode("utf-8")) + "," + binascii.hexlify(transaction.getSignature()).decode('ascii')
 
             file.write(pendingData + "\n")
             file.close()
@@ -113,6 +124,7 @@ class Blockchain (object):
 
             print("SUCCESS SENDING PENDING TRANSACTION")
 
+
             return True
         return False
 
@@ -122,7 +134,7 @@ class Blockchain (object):
     def minePendingTransactions(self, miner):
 
         pendingLength = len(self.pendingTransactions)
-        if (pendingLength <= 0):
+        if (pendingLength <= 1):
             print("There must be at least one transaction on block to mine")
             return False
         else:
@@ -153,17 +165,19 @@ class Blockchain (object):
 
             rewardGiver = Transaction(miner, self.reward, None)
 
-            pendingData = str(miner.publickey().export_key()) + "," + str(self.reward) + "," + str("MINER REWARD") + "\n";
+            pendingData = str(miner.publickey().export_key().decode("utf-8")) + "," + str(self.reward)
             file = open("mempool.csv", "a")
             file.write(pendingData)
             file.close()
 
             self.getClient().disconnect()
-            self.getClient().setUsername("mempool")
+            self.getClient().setUsername("minerReward")
             self.getClient().createConnection()
             self.getClient().sendPending(pendingData)
 
             self.pendingTransactions = [rewardGiver]
+
+
         return True
 
     def getWalletBalance(self, publicKey):
@@ -220,6 +234,7 @@ class Blockchain (object):
         for x in range(0, blockCounter):
             blockPickled = open (("blockchain/block_" + str(x) + ".block"), "rb")
             blockData = pickle.load(blockPickled)
+            blockPickled.close()
 
             transactions = blockData[0]
             for transaction in transactions:
@@ -235,6 +250,7 @@ class Blockchain (object):
             block.prev = blockData[3]
             block.nonse = blockData[4]
             block.hash = blockData[5]
+            block.miner = blockData[6]
             # block.mineHash = blockData[6]
 
             self.chain.append(block)

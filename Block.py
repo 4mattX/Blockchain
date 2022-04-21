@@ -4,6 +4,7 @@ import json
 import pickle
 import time
 from base64 import b64decode
+from threading import Thread
 from time import sleep
 
 from Cryptodome.Signature.pkcs1_15 import PKCS115_SigScheme
@@ -33,6 +34,7 @@ class Block (object):
         self.prev = ''
         self.nonse = 0
         self.hash = self.calculateHash()
+        self.miner = None
 
 
     def calculateHash(self):
@@ -89,6 +91,10 @@ class Block (object):
         invalidWallets = []
 
         blockchain = self.blockchain
+
+        # Set miner key on block for verification purposes
+        with open('sender/public.pem', 'rb') as file:
+            self.miner = file.read()
 
         for transaction in self.transactions:
             inWallets = False
@@ -171,12 +177,15 @@ class Block (object):
     def getHash(self):
         return self.hash
 
+    def getMiner(self):
+        return self.miner
+
     def sendBlock(self):
         blockPickled = open (("blockchain/block_" + str(self.index) + ".block"), "rb")
         blockData = pickle.load(blockPickled)
 
         self.blockchain.getClient().disconnect()
-        self.blockchain.getClient().setUsername(str(self.index))
+        self.blockchain.getClient().setUsername(str(self.index) + "of" + str(self.index))
         self.blockchain.getClient().createConnection()
         self.blockchain.getClient().sendMessage(pickle.dumps(blockData))
 
@@ -196,7 +205,7 @@ class Block (object):
                 continue
             serialTransactions.append(transaction)
 
-        emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash)
+        emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash, self.miner)
 
         filehandler = open(fileName, 'wb')
         pickle.dump(emptyBlock, filehandler)
