@@ -220,3 +220,34 @@ class Block (object):
                 transaction.publicKey = None
                 transaction.receiverKey = RSA.import_key(transaction.receiverKey)
         self.sendBlock()
+
+        def recordBlockNoSend(self):
+            fileName = "blockchain/block_" + str(self.index) + ".block"
+
+            # Must Serialize all transactions first
+            serialTransactions = []
+            for transaction in self.transactions:
+                try:
+                    transaction.publicKey = transaction.publicKey.publickey().export_key()
+                    transaction.receiverKey = transaction.receiverKey.publickey().export_key()
+                except AttributeError:
+                    transaction.publicKey = ""
+                    transaction.receiverKey = transaction.receiverKey.publickey().export_key()
+                    serialTransactions.append(transaction)
+                    continue
+                serialTransactions.append(transaction)
+
+            emptyBlock = (serialTransactions, self.time, self.index, self.prev, self.nonse, self.hash, self.miner)
+
+            filehandler = open(fileName, 'wb')
+            pickle.dump(emptyBlock, filehandler)
+            filehandler.close()
+
+            # After Serialization and recording must un-serialize
+            for transaction in self.transactions:
+                try:
+                    transaction.publicKey = RSA.import_key(transaction.publicKey)
+                    transaction.receiverKey = RSA.import_key(transaction.receiverKey)
+                except:
+                    transaction.publicKey = None
+                    transaction.receiverKey = RSA.import_key(transaction.receiverKey)

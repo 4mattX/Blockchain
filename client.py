@@ -8,6 +8,7 @@ import select
 import errno
 import sys
 import threading
+import time
 import traceback
 
 
@@ -175,11 +176,11 @@ class Client(object):
                         message.strip()
 
                         for x in range(len(self.blockchain.chain)):
-                            blockPickled = open (("blockchain/block_" + str(self.index) + ".block"), "rb")
+                            blockPickled = open (("blockchain/block_" + str(x) + ".block"), "rb")
                             blockData = pickle.load(blockPickled)
 
                             self.disconnect()
-                            self.setUsername(str(self.index))
+                            self.setUsername(str(x))
                             self.createConnection()
                             self.sendMessage(pickle.dumps(blockData))
 
@@ -236,12 +237,14 @@ class Client(object):
 
                     # Occurs when the receiver has most up to date blockchain
                     if (int(username) == len(self.blockchain.chain)):
+                        block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
                         continue
 
                     if (int(username) == len(self.blockchain.chain) - 1):
+                        block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("updating blockchain")
@@ -265,7 +268,7 @@ class Client(object):
 
 
 
-            except IOError as e:
+            except Exception as e:
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
