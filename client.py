@@ -179,7 +179,7 @@ class Client(object):
                                 break
                         message.strip()
 
-                        if (len(self.blockchain.getChain()) < blockNum):
+                        if (len(self.blockchain.getChain()) < int(blockNum)):
                             continue
 
                         self.disconnect()
@@ -258,7 +258,7 @@ class Client(object):
                     if (int(indexBlock) > int(maxBlock)):
                         print("here2")
                         self.disconnect()
-                        self.setUsername("request_" + str(indexBlock))
+                        self.setUsername("request_" + str(len(self.blockchain.chain)))
                         self.createConnection()
                         self.sendMessage(b"MESSAGE")
                         continue
@@ -271,7 +271,7 @@ class Client(object):
 
 
 
-            except Exception as e:
+            except IOError as e:
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
