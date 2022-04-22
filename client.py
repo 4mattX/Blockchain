@@ -187,6 +187,7 @@ class Client(object):
                         self.sendMessage(pickle.dumps(blockData))
                         continue
 
+                    try:
                         # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
                         message_header = self.client_socket.recv(HEADER_LENGTH)
                         message_length = int(message_header.decode('utf-8').strip())
@@ -204,8 +205,14 @@ class Client(object):
                                 message += chunk
                             except:
                                 break
-
-                    newBlock = pickle.loads(bytes(message))
+                        newBlock = pickle.loads(bytes(message))
+                    except:
+                        print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
+                        self.disconnect()
+                        self.setUsername("request")
+                        self.createConnection()
+                        self.sendMessage(str(len(self.blockchain.chain)).encode())
+                        continue
 
                     transactions = newBlock[0]
                     for transaction in transactions:
@@ -249,18 +256,19 @@ class Client(object):
             except Exception as e:
                 # if (e.__class__.__name__ == "BlockingIOError" or
                 #     e.__class__.__name__ == "TypeError" or
-                #     e.__class__.__name__ == "IndexError"):
+                #     e.__class__.__name__ == "IndexError" or
+                #     e.__class__.__name__ == "UnicodeDecodeError"):
                 #     continue
-                if (e.__class__.__name__ != "UnpicklingError"):
-                    continue
-
-                print(e.__class__.__name__)
-                print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
-                self.disconnect()
-                self.setUsername("request")
-                self.createConnection()
-                self.sendMessage(str(len(self.blockchain.chain)).encode())
-                continue
+                # # if (e.__class__.__name__ != "UnpicklingError"):
+                # #     continue
+                #
+                # print(e.__class__.__name__)
+                # print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
+                # self.disconnect()
+                # self.setUsername("request")
+                # self.createConnection()
+                # self.sendMessage(str(len(self.blockchain.chain)).encode())
+                # continue
 
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
