@@ -205,21 +205,15 @@ class Client(object):
                         except:
                             break
 
-                    # Print message
-                    # print("username -> " + username)
-                    # print("message length -> " + str(message_length))
-                    # print(message)
-
-                    newBlock = pickle.loads(bytes(message))
-
-                    # if (len(self.blockchain.chain) >= int(username)):
-                    #     return
-                    #
-                    # if (len(self.blockchain.chain) < int(username)):
-                    #     return
-
-                    # if (len(self.blockchain.chain) != int(username)):
-                    #     return
+                    try:
+                        newBlock = pickle.loads(bytes(message))
+                    except:
+                        print("Failed Reading, Sending Request for Block #" +  (str(self.clientBlock + 1)))
+                        self.disconnect()
+                        self.setUsername("request")
+                        self.createConnection()
+                        self.sendMessage(str(username).encode())
+                        continue
 
                     transactions = newBlock[0]
                     for transaction in transactions:
