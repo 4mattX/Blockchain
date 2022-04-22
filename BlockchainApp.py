@@ -517,6 +517,8 @@ if __name__ == '__main__':
         # app.hashTimer += 100
         app.hashRate = 0
 
+        app.updateBlockchain()
+
         if (not app.isMining):
             try:
                 app.thread.join()
