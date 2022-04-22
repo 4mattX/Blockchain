@@ -170,7 +170,7 @@ class Client(object):
                                 break
                         message.strip()
 
-                        blockNum = int(message)
+                        blockNum = int(message.split(" ")[0])
 
                         blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
@@ -236,6 +236,8 @@ class Client(object):
 
                     self.updateMaxKnownBlock(int(username))
                     self.clientBlock = len(self.blockchain.chain)
+                    print("max: " + str(self.maxKnownBlock))
+                    print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
                         # block.recordBlockNoSend()
@@ -243,11 +245,11 @@ class Client(object):
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
 
-                        if (self.clientBlock != self.maxKnownBlock):
+                        if (self.clientBlock < self.maxKnownBlock):
                             self.disconnect()
                             self.setUsername("request")
                             self.createConnection()
-                            self.sendMessage((str(self.clientBlock + 1)).encode())
+                            self.sendMessage((str(self.clientBlock)).encode())
                         continue
 
 
@@ -256,11 +258,12 @@ class Client(object):
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
 
-                if (self.clientBlock != self.maxKnownBlock):
-                    self.disconnect()
-                    self.setUsername("request")
-                    self.createConnection()
-                    self.sendMessage((str(self.clientBlock + 1)).encode())
+
+                # if (self.clientBlock < self.maxKnownBlock):
+                #     self.disconnect()
+                #     self.setUsername("request")
+                #     self.createConnection()
+                #     self.sendMessage((str(self.clientBlock + 1)).encode())
                 continue
 
 
