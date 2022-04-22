@@ -415,20 +415,11 @@ class BlockchainApp(Frame):
 
     def updateBlockchain(self):
 
-        blockchain.getClient().updateMaxKnownBlock(len(blockchain.getChain()))
-
-        if (blockchain.getClient().maxKnownBlock == blockchain.getClient().clientBlock):
-            blockchain.getClient().startThread()
-            blockchain.getClient().disconnect()
-            blockchain.getClient().setUsername("reqMax")
-            blockchain.getClient().createConnection()
-            blockchain.getClient().sendMessage(str("message").encode())
-        else:
-            print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
-            blockchain.getClient().disconnect()
-            blockchain.getClient().setUsername("request")
-            blockchain.getClient().createConnection()
-            blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
+        print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
+        blockchain.getClient().disconnect()
+        blockchain.getClient().setUsername("request")
+        blockchain.getClient().createConnection()
+        blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
 
     def intermediateMine(self):
 

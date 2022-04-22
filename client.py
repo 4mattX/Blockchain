@@ -156,33 +156,31 @@ class Client(object):
                         self.blockchain.pendingTransactions.append(transaction)
                         continue
 
-                    if (username == "reqMax"):
-                        message_header = self.client_socket.recv(HEADER_LENGTH)
-                        message_length = int(message_header.decode('utf-8').strip())
-                        message = self.client_socket.recv(message_length).decode('utf-8')
-
-                        blockNum = int(message)
-
-                        print("Requesting max block")
-
-                        self.disconnect()
-                        self.setUsername("returnReqMax")
-                        self.createConnection()
-                        self.sendMessage(str(len(self.blockchain.getChain())).encode())
-                        continue
-
-                    if (username == "returnReqMax"):
-                        message_header = self.client_socket.recv(HEADER_LENGTH)
-                        message_length = int(message_header.decode('utf-8').strip())
-                        message = self.client_socket.recv(message_length).decode('utf-8')
-
-                        blockNum = int(message)
-
-                        print("Received max block")
-
-                        if (blockNum > self.clientBlock):
-                            self.maxKnownBlock = blockNum
-                        continue
+                    # if (username == "reqMax"):
+                    #     message_header = self.client_socket.recv(HEADER_LENGTH)
+                    #     message_length = int(message_header.decode('utf-8').strip())
+                    #     message = self.client_socket.recv(message_length).decode('utf-8')
+                    #
+                    #     print("Requesting max block")
+                    #
+                    #     self.disconnect()
+                    #     self.setUsername("returnReqMax")
+                    #     self.createConnection()
+                    #     self.sendMessage(str(len(self.blockchain.getChain())).encode())
+                    #     continue
+                    #
+                    # if (username == "returnReqMax"):
+                    #     message_header = self.client_socket.recv(HEADER_LENGTH)
+                    #     message_length = int(message_header.decode('utf-8').strip())
+                    #     message = self.client_socket.recv(message_length).decode('utf-8')
+                    #
+                    #     blockNum = int(message)
+                    #
+                    #     print("Received max block")
+                    #
+                    #     if (blockNum > self.clientBlock):
+                    #         self.maxKnownBlock = blockNum
+                    #     continue
 
                     if (username == "request"):
                         message_header = self.client_socket.recv(HEADER_LENGTH)
@@ -291,7 +289,7 @@ class Client(object):
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
 
-
+                # self.clientBlock = len(self.blockchain.getChain())
                 # if (self.clientBlock < self.maxKnownBlock):
                 #     self.disconnect()
                 #     self.setUsername("request")
