@@ -414,11 +414,21 @@ class BlockchainApp(Frame):
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
     def updateBlockchain(self):
-        print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
-        blockchain.getClient().disconnect()
-        blockchain.getClient().setUsername("request")
-        blockchain.getClient().createConnection()
-        blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
+
+        blockchain.getClient().updateMaxKnownBlock(len(blockchain.getChain()))
+
+        if (blockchain.getClient().maxKnownBlock == blockchain.getClient().clientBlock):
+            blockchain.getClient().startThread()
+            blockchain.getClient().disconnect()
+            blockchain.getClient().setUsername("reqMax")
+            blockchain.getClient().createConnection()
+            blockchain.getClient().sendMessage(str("message").encode())
+        else:
+            print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
+            blockchain.getClient().disconnect()
+            blockchain.getClient().setUsername("request")
+            blockchain.getClient().createConnection()
+            blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
 
     def intermediateMine(self):
 
@@ -534,23 +544,19 @@ if __name__ == '__main__':
     #
     # blockchain.addClient(client)
 
-    blockchain.getClient().startThread()
-    blockchain.getClient().disconnect()
-    blockchain.getClient().setUsername("reqMax")
-    blockchain.getClient().createConnection()
-    blockchain.getClient().sendMessage(str("message").encode())
-
-
     def update():
         app.updateSideBar()
         app.updateMinerScreen()
         # app.hashTimer += 500
         app.hashRate = 0
 
-        if (blockchain.getClient().maxKnownBlock > blockchain.getClient().clientBlock):
-            app.master.title("Theta Coin | UPDATED NEEDED")
-        else:
-            app.master.title("Theta Coin")
+        # if (blockchain.getClient().maxKnownBlock > blockchain.getClient().clientBlock or blockchain.getClient().maxKnownBlock == 0):
+        #     app.master.title("Theta Coin | UPDATED NEEDED")
+        # else:
+        #     app.master.title("Theta Coin!")
+        #
+        # print("max: " + str(blockchain.getClient().maxKnownBlock))
+        # print("client: " + str(blockchain.getClient().clientBlock))
 
 
         gc.collect()

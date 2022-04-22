@@ -30,7 +30,7 @@ class Client(object):
         self.user_header = ''
         self.client_socket = None
         self.blockchain = blockchain
-        self.maxKnownBlock = 0
+        self.maxKnownBlock = len(self.blockchain.getChain())
         self.clientBlock = len(self.blockchain.getChain())
 
     def setUsername(self, username):
@@ -180,7 +180,8 @@ class Client(object):
 
                         print("Received max block")
 
-                        self.maxKnownBlock = blockNum
+                        if (blockNum > self.clientBlock):
+                            self.maxKnownBlock = blockNum
                         continue
 
                     if (username == "request"):
@@ -223,7 +224,7 @@ class Client(object):
                     try:
                         newBlock = pickle.loads(bytes(message))
                     except:
-                        print("Failed Reading, Sending Request for Block #" +  (str(username)))
+                        print("Failed Reading, Sending Request for Block #" + (str(username)))
                         self.disconnect()
                         self.setUsername("request")
                         self.createConnection()
