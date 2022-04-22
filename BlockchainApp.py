@@ -390,9 +390,9 @@ class BlockchainApp(Frame):
 
     def updateBlockchain(self):
         blockchain.getClient().disconnect()
-        blockchain.getClient().setUsername("updateRequest")
+        blockchain.getClient().setUsername("request")
         blockchain.getClient().createConnection()
-        blockchain.getClient().sendMessage(b'message')
+        blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
 
     def intermediateMine(self):
 

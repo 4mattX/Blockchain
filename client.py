@@ -30,6 +30,8 @@ class Client(object):
         self.user_header = ''
         self.client_socket = None
         self.blockchain = blockchain
+        self.maxKnownBlock = 0
+        self.clientBlock = 0
 
     def setUsername(self, username):
         self.username = username
@@ -50,6 +52,10 @@ class Client(object):
         # self.client_socket.detach()
         self.client_socket.close()
 
+    def updateMaxKnownBlock(self, num):
+        if (num > self.maxKnownBlock):
+            self.maxKnownBlock = num
+
     def sendMessage(self, message):
         print("Sending Block")
         # message = message.encode('utf-8')
@@ -65,17 +71,6 @@ class Client(object):
     def startThread(self):
         clientThread = threading.Thread(target=self.receiveMessage, name="clientThread")
         clientThread.start()
-
-    def recvall(self, sock):
-        BUFF_SIZE = 4096 # 4 KiB
-        data = b''
-        while True:
-            part = sock.recv(BUFF_SIZE)
-            data += part
-            if len(part) < BUFF_SIZE:
-                # either 0 or end of data
-                break
-        return data
 
     def receiveMessage(self):
         print("STARTED RECEIVING MESSAGES")
@@ -159,9 +154,9 @@ class Client(object):
                         transaction.receiverKey = RSA.import_key(transaction.receiverKey)
 
                         self.blockchain.pendingTransactions.append(transaction)
+                        continue
 
-                    if (username == "updateRequest"):
-
+                    if (username == "request"):
                         message = ""
                         isMore = True
 
@@ -175,14 +170,16 @@ class Client(object):
                                 break
                         message.strip()
 
-                        for x in range(len(self.blockchain.chain)):
-                            blockPickled = open (("blockchain/block_" + str(x) + ".block"), "rb")
-                            blockData = pickle.load(blockPickled)
+                        blockNum = int(message)
 
-                            self.disconnect()
-                            self.setUsername(str(x))
-                            self.createConnection()
-                            self.sendMessage(pickle.dumps(blockData))
+                        blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
+                        blockData = pickle.load(blockPickled)
+
+                        self.disconnect()
+                        self.setUsername(str(blockNum))
+                        self.createConnection()
+                        self.sendMessage(pickle.dumps(blockData))
+                        continue
 
                     # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
                     message_header = self.client_socket.recv(HEADER_LENGTH)
@@ -236,42 +233,34 @@ class Client(object):
                     # print("Block Loaded Success -> " + str(block.index))
 
                     # Occurs when the receiver has most up to date blockchain
-                    if (int(username) == len(self.blockchain.chain)):
-                        block.recordBlockNoSend()
+
+                    self.updateMaxKnownBlock(int(username))
+                    self.clientBlock = len(self.blockchain.chain)
+
+                    if (int(username) == self.clientBlock):
+                        # block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
+
+                        if (self.clientBlock != self.maxKnownBlock):
+                            self.disconnect()
+                            self.setUsername("request")
+                            self.createConnection()
+                            self.sendMessage((str(self.clientBlock + 1)).encode())
                         continue
-
-                    if (int(username) == len(self.blockchain.chain) - 1):
-                        block.recordBlockNoSend()
-                        self.blockchain.addBlock(block)
-                        self.blockchain.pendingTransactions.clear()
-                        print("updating blockchain")
-                        continue
-
-                    # # Occurs when receiver is out of date
-                    # # Receiver will then request for their next block
-                    # if (int(indexBlock) > len(self.blockchain.chain)):
-                    #     print("here2")
-                    #     self.disconnect()
-                    #     self.setUsername("request_" + str(len(self.blockchain.chain)))
-                    #     self.createConnection()
-                    #     self.sendMessage(b"MESSAGE")
-                    #     continue
-                    #
-                    # if (int(username) < len(self.blockchain.chain)):
-                    #     print("here3")
-                    #     print("Sender has less blocks than receiver")
-                    #     continue
-                    # print("here4")
-
 
 
             except Exception as e:
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
+
+                if (self.clientBlock != self.maxKnownBlock):
+                    self.disconnect()
+                    self.setUsername("request")
+                    self.createConnection()
+                    self.sendMessage((str(self.clientBlock + 1)).encode())
                 continue
 
 
