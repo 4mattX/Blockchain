@@ -31,7 +31,7 @@ class Client(object):
         self.client_socket = None
         self.blockchain = blockchain
         self.maxKnownBlock = 0
-        self.clientBlock = 0
+        self.clientBlock = len(self.blockchain.getChain())
 
     def setUsername(self, username):
         self.username = username
@@ -156,19 +156,34 @@ class Client(object):
                         self.blockchain.pendingTransactions.append(transaction)
                         continue
 
+                    if (username == "reqMax"):
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        message = self.client_socket.recv(message_length).decode('utf-8')
+
+                        blockNum = int(message)
+
+                        print("Requesting max block")
+
+                        self.disconnect()
+                        self.setUsername("returnReqMax")
+                        self.createConnection()
+                        self.sendMessage(str(len(self.blockchain.getChain())).encode())
+                        continue
+
+                    if (username == "returnReqMax"):
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        message = self.client_socket.recv(message_length).decode('utf-8')
+
+                        blockNum = int(message)
+
+                        print("Received max block")
+
+                        self.maxKnownBlock = blockNum
+                        continue
+
                     if (username == "request"):
-                        message = ""
-                        # isMore = True
-                        #
-                        # while isMore:
-                        #     try:
-                        #         chunk = self.client_socket.recv(RECV_BUF_SIZE).decode('utf-8')
-                        #         if not chunk:
-                        #             isMore = False
-                        #         message += chunk
-                        #     except:
-                        #         break
-                        # message.strip()
                         message_header = self.client_socket.recv(HEADER_LENGTH)
                         message_length = int(message_header.decode('utf-8').strip())
                         message = self.client_socket.recv(message_length).decode('utf-8')
@@ -187,31 +202,32 @@ class Client(object):
                         self.sendMessage(pickle.dumps(blockData))
                         continue
 
+                    # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
+                    message_header = self.client_socket.recv(HEADER_LENGTH)
+                    message_length = int(message_header.decode('utf-8').strip())
+                    # message = self.client_socket.recv(message_length).decode('utf-8')
+                    # message = self.client_socket.recv(message_length)
+
+                    message = b''
+                    isMore = True
+
+                    while isMore:
+                        try:
+                            chunk = self.client_socket.recv(RECV_BUF_SIZE)
+                            if not chunk:
+                                isMore = False
+                            message += chunk
+                        except:
+                            break
+
                     try:
-                        # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
-                        message_header = self.client_socket.recv(HEADER_LENGTH)
-                        message_length = int(message_header.decode('utf-8').strip())
-                        # message = self.client_socket.recv(message_length).decode('utf-8')
-                        # message = self.client_socket.recv(message_length)
-
-                        message = b''
-                        isMore = True
-
-                        while isMore:
-                            try:
-                                chunk = self.client_socket.recv(RECV_BUF_SIZE)
-                                if not chunk:
-                                    isMore = False
-                                message += chunk
-                            except:
-                                break
                         newBlock = pickle.loads(bytes(message))
                     except:
-                        print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
+                        print("Failed Reading, Sending Request for Block #" +  (str(username)))
                         self.disconnect()
                         self.setUsername("request")
                         self.createConnection()
-                        self.sendMessage(str(len(self.blockchain.chain)).encode())
+                        self.sendMessage(str(username).encode())
                         continue
 
                     transactions = newBlock[0]
@@ -239,7 +255,7 @@ class Client(object):
                     # print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
-                        # block.recordBlockNoSend()
+                        block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver Block #" + str(username))
