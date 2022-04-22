@@ -158,19 +158,23 @@ class Client(object):
 
                     if (username == "request"):
                         message = ""
-                        isMore = True
+                        # isMore = True
+                        #
+                        # while isMore:
+                        #     try:
+                        #         chunk = self.client_socket.recv(RECV_BUF_SIZE).decode('utf-8')
+                        #         if not chunk:
+                        #             isMore = False
+                        #         message += chunk
+                        #     except:
+                        #         break
+                        # message.strip()
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        message = self.client_socket.recv(message_length).decode('utf-8')
 
-                        while isMore:
-                            try:
-                                chunk = self.client_socket.recv(RECV_BUF_SIZE).decode('utf-8')
-                                if not chunk:
-                                    isMore = False
-                                message += chunk
-                            except:
-                                break
-                        message.strip()
-
-                        blockNum = int(message.split(" ")[0])
+                        # blockNum = int(message.split(" ")[0])
+                        blockNum = int(message)
 
                         print("Sending Block Num From Request #" + str(blockNum))
 

@@ -389,6 +389,7 @@ class BlockchainApp(Frame):
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
     def updateBlockchain(self):
+        print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
         blockchain.getClient().disconnect()
         blockchain.getClient().setUsername("request")
         blockchain.getClient().createConnection()
