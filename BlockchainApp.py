@@ -48,7 +48,6 @@ class BlockchainApp(Frame):
         self.nonseLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
         self.hashLabel = Label(self.mainCanvas, background=self.frameColor, foreground='white')
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", foreground='white', activeforeground='white', relief='flat', overrelief='flat')
-        self.buttonFont = font.Font(family='Uni Sans', weight='bold', size=16)
         self.nonse = 0
         self.hashRate = 0
         self.inMiner = False
@@ -56,10 +55,6 @@ class BlockchainApp(Frame):
         self.isMining = False
 
         self.client = None
-
-        with open('sender/public.pem', "rb") as file:
-            self.senderKey = RSA.import_key(file.read())
-            file.close()
 
 
         self.thread = threading.Thread(target=self.mineBlock, name="mineThread")
@@ -70,8 +65,7 @@ class BlockchainApp(Frame):
         # Establish Blockchain here
         directory = os.listdir("blockchain")
         if (len(directory) == 0):
-            # blockchain.addFirstBlock()
-            print("Empty Blockchain")
+            blockchain.addFirstBlock()
         else:
             blockchain.getBlockChainFromData()
 
@@ -86,18 +80,15 @@ class BlockchainApp(Frame):
 
     def updateSideBar(self):
         # self.balanceLabel.destroy()
-
-
-        balanceString = "Balance: " + str(blockchain.getWalletBalance(self.senderKey))
-        self.balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=self.buttonFont).place(x=20, y=420)
+        buttonFont = font.Font(family='Uni Sans', weight='bold', size=16)
+        with open('sender/public.pem', "rb") as file:
+            senderKey = RSA.import_key(file.read())
+            file.close()
+        balanceString = "Balance: " + str(blockchain.getWalletBalance(senderKey))
+        self.balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
 
         blocksString = "Blocks: " + str(len(blockchain.chain))
-        self.blocksLabel = Label(self, text=blocksString, background='#23272a', foreground='white', font=self.buttonFont).place(x=20, y=460)
-
-        del balanceString
-        del blocksString
-        del self.balanceLabel
-        del self.blocksLabel
+        self.blocksLabel = Label(self, text=blocksString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=460)
 
     def updateMinerScreen(self):
         if (not self.inMiner):
@@ -111,41 +102,25 @@ class BlockchainApp(Frame):
         nonseString = "Nonse: " + str(self.nonse)
         labelFont = font.Font(family='Uni Sans', weight='bold', size=16)
         statusFont = font.Font(family='Uni Sans', weight='bold', size=24)
-        spaceLabel = Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
+        Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
         self.nonseLabel = Label(self.mainCanvas, text=nonseString, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
 
-        hashString = "Hash Rate: " + str(self.truncate(self.hashRate / 50, 1)) + " h/ms"
-        spaceLabel2 = Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
-        hashLabel = Label(self.mainCanvas, text=hashString, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
+        hashString = "Hash Rate: " + str(self.truncate(self.hashRate / 10, 1)) + " h/ms"
+        Label(self.mainCanvas, text=lotsOfSpace, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
+        Label(self.mainCanvas, text=hashString, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
 
         amountTransactions = str(len(blockchain.pendingTransactions))
         amountTransactions = "Amount Transactions: " + amountTransactions
-        tranLabel = Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
+        Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
 
         blockNum = str(len(blockchain.chain))
         blockNum = "Block Index: " + blockNum
-        blockNumLabel = Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
-
-        miningLabel = None
+        Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
 
         if (self.isMining):
-            miningLabel = Label(self.mainCanvas, text="Mining                            ", background=self.frameColor, foreground='lime', font=statusFont).place(x=190, y=16)
+            Label(self.mainCanvas, text="Mining                            ", background=self.frameColor, foreground='lime', font=statusFont).place(x=190, y=16)
         else:
-            miningLabel = Label(self.mainCanvas, text="Suspended", background=self.frameColor, foreground='red', font=statusFont).place(x=190, y=16)
-
-        del lotsOfSpace
-        del nonseString
-        del labelFont
-        del statusFont
-        del spaceLabel
-        del spaceLabel2
-        del hashString
-        del hashLabel
-        del amountTransactions
-        del tranLabel
-        del blockNum
-        del blockNumLabel
-        del miningLabel
+            Label(self.mainCanvas, text="Suspended", background=self.frameColor, foreground='red', font=statusFont).place(x=190, y=16)
 
     def truncate(self, number, digits) -> float:
         stepper = 10.0 ** digits
@@ -179,7 +154,7 @@ class BlockchainApp(Frame):
             friendButtons[counter] = HoverButton(self.mainCanvas, text=friendText, width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda friendText=friendText: self.selectFriend(friendText)).place(x=0, y=counter * 50 + 40)
             self.miniCanvasComponents.append(friendButtons[counter])
             counter += 1
-            
+
         # Text box for user input
         amountLabel = Label(self.mainCanvas, text='Amount:', background=self.frameColor, foreground='white', font=buttonFont).place(x=20, y=400)
         userInput = Text(self.mainCanvas, height=1, width=15, background='#23272a', foreground='white', borderwidth=0)
@@ -256,7 +231,7 @@ class BlockchainApp(Frame):
         Label(self.mainCanvas, text='Your Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
         transactionsText = ""
-        for block in reversed(blockchain.chain):
+        for block in blockchain.chain:
             for transaction in block.getTransactions():
 
                 amount = "Amount: "
@@ -414,8 +389,6 @@ class BlockchainApp(Frame):
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
     def updateBlockchain(self):
-
-        print("Sending Block Num From Request #" + str(len(blockchain.getChain())))
         blockchain.getClient().disconnect()
         blockchain.getClient().setUsername("request")
         blockchain.getClient().createConnection()
@@ -473,7 +446,7 @@ class BlockchainApp(Frame):
         BUTTON_WIDTH = 17
         BUTTON_HEIGHT = 5
 
-        self.master.title("Theta Coin")
+        self.master.title("Blockchain")
         self.pack(fill=BOTH, expand=1)
 
         self.master.update_idletasks()
@@ -519,7 +492,7 @@ class BlockchainApp(Frame):
         # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
         # balanceLabel.place(x=20, y=420)
         nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
-        
+
         # Update Button
         updateButton = Button(text="Update Blockchain", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.updateBlockchain()).place(x=17, y=550)
 
@@ -535,21 +508,20 @@ if __name__ == '__main__':
     #
     # blockchain.addClient(client)
 
+    blockchain.getClient().startThread()
+
+
     def update():
         app.updateSideBar()
         app.updateMinerScreen()
-        # app.hashTimer += 500
+        # app.hashTimer += 100
         app.hashRate = 0
 
-        # if (blockchain.getClient().maxKnownBlock > blockchain.getClient().clientBlock or blockchain.getClient().maxKnownBlock == 0):
-        #     app.master.title("Theta Coin | UPDATED NEEDED")
-        # else:
-        #     app.master.title("Theta Coin!")
-        #
-        # print("max: " + str(blockchain.getClient().maxKnownBlock))
-        # print("client: " + str(blockchain.getClient().clientBlock))
-
-
+        if (not app.isMining):
+            try:
+                app.thread.join()
+            except:
+                gc.collect()
         gc.collect()
 
         # client.receiveMessage()

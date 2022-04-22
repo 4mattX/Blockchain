@@ -30,8 +30,8 @@ class Client(object):
         self.user_header = ''
         self.client_socket = None
         self.blockchain = blockchain
-        self.maxKnownBlock = len(self.blockchain.getChain())
-        self.clientBlock = len(self.blockchain.getChain())
+        self.maxKnownBlock = 0
+        self.clientBlock = 0
 
     def setUsername(self, username):
         self.username = username
@@ -156,41 +156,21 @@ class Client(object):
                         self.blockchain.pendingTransactions.append(transaction)
                         continue
 
-                    # if (username == "reqMax"):
-                    #     message_header = self.client_socket.recv(HEADER_LENGTH)
-                    #     message_length = int(message_header.decode('utf-8').strip())
-                    #     message = self.client_socket.recv(message_length).decode('utf-8')
-                    #
-                    #     print("Requesting max block")
-                    #
-                    #     self.disconnect()
-                    #     self.setUsername("returnReqMax")
-                    #     self.createConnection()
-                    #     self.sendMessage(str(len(self.blockchain.getChain())).encode())
-                    #     continue
-                    #
-                    # if (username == "returnReqMax"):
-                    #     message_header = self.client_socket.recv(HEADER_LENGTH)
-                    #     message_length = int(message_header.decode('utf-8').strip())
-                    #     message = self.client_socket.recv(message_length).decode('utf-8')
-                    #
-                    #     blockNum = int(message)
-                    #
-                    #     print("Received max block")
-                    #
-                    #     if (blockNum > self.clientBlock):
-                    #         self.maxKnownBlock = blockNum
-                    #     continue
-
                     if (username == "request"):
-                        message_header = self.client_socket.recv(HEADER_LENGTH)
-                        message_length = int(message_header.decode('utf-8').strip())
-                        message = self.client_socket.recv(message_length).decode('utf-8')
+                        message = ""
+                        isMore = True
 
-                        # blockNum = int(message.split(" ")[0])
-                        blockNum = int(message)
+                        while isMore:
+                            try:
+                                chunk = self.client_socket.recv(RECV_BUF_SIZE).decode('utf-8')
+                                if not chunk:
+                                    isMore = False
+                                message += chunk
+                            except:
+                                break
+                        message.strip()
 
-                        print("Sending Block Num From Request #" + str(blockNum))
+                        blockNum = int(message.split(" ")[0])
 
                         blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
@@ -219,15 +199,21 @@ class Client(object):
                         except:
                             break
 
-                    try:
-                        newBlock = pickle.loads(bytes(message))
-                    except:
-                        print("Failed Reading, Sending Request for Block #" + (str(username)))
-                        self.disconnect()
-                        self.setUsername("request")
-                        self.createConnection()
-                        self.sendMessage(str(username).encode())
-                        continue
+                    # Print message
+                    # print("username -> " + username)
+                    # print("message length -> " + str(message_length))
+                    # print(message)
+
+                    newBlock = pickle.loads(bytes(message))
+
+                    # if (len(self.blockchain.chain) >= int(username)):
+                    #     return
+                    #
+                    # if (len(self.blockchain.chain) < int(username)):
+                    #     return
+
+                    # if (len(self.blockchain.chain) != int(username)):
+                    #     return
 
                     transactions = newBlock[0]
                     for transaction in transactions:
@@ -250,51 +236,33 @@ class Client(object):
 
                     self.updateMaxKnownBlock(int(username))
                     self.clientBlock = len(self.blockchain.chain)
-                    # print("max: " + str(self.maxKnownBlock))
-                    # print("client: " + str(self.clientBlock))
+                    print("max: " + str(self.maxKnownBlock))
+                    print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
-                        block.recordBlockNoSend()
+                        # block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
-                        print("added block up-to-date receiver Block #" + str(username))
+                        print("added block up-to-date receiver")
 
                         if (self.clientBlock < self.maxKnownBlock):
-                            print("Sending Request for Block #" +  (str(self.clientBlock + 1)))
                             self.disconnect()
                             self.setUsername("request")
                             self.createConnection()
-                            self.sendMessage((str(self.clientBlock + 1)).encode())
+                            self.sendMessage((str(self.clientBlock)).encode())
                         continue
 
 
             except Exception as e:
-                # if (e.__class__.__name__ == "BlockingIOError" or
-                #     e.__class__.__name__ == "TypeError" or
-                #     e.__class__.__name__ == "IndexError" or
-                #     e.__class__.__name__ == "UnicodeDecodeError"):
-                #     continue
-                # # if (e.__class__.__name__ != "UnpicklingError"):
-                # #     continue
-                #
-                # print(e.__class__.__name__)
-                # print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
-                # self.disconnect()
-                # self.setUsername("request")
-                # self.createConnection()
-                # self.sendMessage(str(len(self.blockchain.chain)).encode())
-                # continue
-
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
 
-                # self.clientBlock = len(self.blockchain.getChain())
+
                 # if (self.clientBlock < self.maxKnownBlock):
                 #     self.disconnect()
                 #     self.setUsername("request")
                 #     self.createConnection()
                 #     self.sendMessage((str(self.clientBlock + 1)).encode())
                 continue
-
 
