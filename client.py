@@ -247,9 +247,14 @@ class Client(object):
 
 
             except Exception as e:
-                if (e.__class__.__name__ == "BlockingIOError"):
+                # if (e.__class__.__name__ == "BlockingIOError" or
+                #     e.__class__.__name__ == "TypeError" or
+                #     e.__class__.__name__ == "IndexError"):
+                #     continue
+                if (e.__class__.__name__ != "UnpicklingError"):
                     continue
 
+                print(e.__class__.__name__)
                 print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
                 self.disconnect()
                 self.setUsername("request")
