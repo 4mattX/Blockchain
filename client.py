@@ -187,33 +187,25 @@ class Client(object):
                         self.sendMessage(pickle.dumps(blockData))
                         continue
 
-                    # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
-                    message_header = self.client_socket.recv(HEADER_LENGTH)
-                    message_length = int(message_header.decode('utf-8').strip())
-                    # message = self.client_socket.recv(message_length).decode('utf-8')
-                    # message = self.client_socket.recv(message_length)
+                        # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        # message = self.client_socket.recv(message_length).decode('utf-8')
+                        # message = self.client_socket.recv(message_length)
 
-                    message = b''
-                    isMore = True
+                        message = b''
+                        isMore = True
 
-                    while isMore:
-                        try:
-                            chunk = self.client_socket.recv(RECV_BUF_SIZE)
-                            if not chunk:
-                                isMore = False
-                            message += chunk
-                        except:
-                            break
+                        while isMore:
+                            try:
+                                chunk = self.client_socket.recv(RECV_BUF_SIZE)
+                                if not chunk:
+                                    isMore = False
+                                message += chunk
+                            except:
+                                break
 
-                    try:
-                        newBlock = pickle.loads(bytes(message))
-                    except:
-                        print("Failed Reading, Sending Request for Block #" +  (str(self.clientBlock + 1)))
-                        self.disconnect()
-                        self.setUsername("request")
-                        self.createConnection()
-                        self.sendMessage(str(username).encode())
-                        continue
+                    newBlock = pickle.loads(bytes(message))
 
                     transactions = newBlock[0]
                     for transaction in transactions:
@@ -255,6 +247,16 @@ class Client(object):
 
 
             except Exception as e:
+                if (e.__class__.__name__ == "BlockingIOError"):
+                    continue
+
+                print("Failed Reading, Sending Request for Block #" +  (str(len(self.blockchain.chain))))
+                self.disconnect()
+                self.setUsername("request")
+                self.createConnection()
+                self.sendMessage(str(len(self.blockchain.chain)).encode())
+                continue
+
                 # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
                 #     print('Reading error: {}'.format(str(e)))
