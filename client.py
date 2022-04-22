@@ -172,6 +172,8 @@ class Client(object):
 
                         blockNum = int(message.split(" ")[0])
 
+                        print("Sending Block Num From Request #" + str(blockNum))
+
                         blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
 
@@ -236,20 +238,21 @@ class Client(object):
 
                     self.updateMaxKnownBlock(int(username))
                     self.clientBlock = len(self.blockchain.chain)
-                    print("max: " + str(self.maxKnownBlock))
-                    print("client: " + str(self.clientBlock))
+                    # print("max: " + str(self.maxKnownBlock))
+                    # print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
                         # block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
-                        print("added block up-to-date receiver")
+                        print("added block up-to-date receiver Block #" + str(username))
 
                         if (self.clientBlock < self.maxKnownBlock):
+                            print("Sending Request for Block #" +  (str(self.clientBlock + 1)))
                             self.disconnect()
                             self.setUsername("request")
                             self.createConnection()
-                            self.sendMessage((str(self.clientBlock)).encode())
+                            self.sendMessage((str(self.clientBlock + 1)).encode())
                         continue
 
 
