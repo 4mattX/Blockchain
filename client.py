@@ -166,6 +166,9 @@ class Client(object):
 
                         print("Sending Block Num From Request #" + str(blockNum))
 
+                        if (blockNum > len(self.blockchain.getChain())):
+                            continue
+
                         blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
 

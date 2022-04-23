@@ -81,7 +81,10 @@ class Blockchain (object):
         return self.chain[-1]
 
     def addBlock(self, block):
-        block.prev = self.chain[-1].getHash()
+        try:
+            block.prev = self.chain[-1].getHash()
+        except:
+            block.prev = None
         self.chain.append(block)
 
     def addTransaction(self, receiverKey, amount, publicKey, privateKey):
