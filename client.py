@@ -157,20 +157,14 @@ class Client(object):
                         continue
 
                     if (username == "request"):
-                        message = ""
-                        isMore = True
+                        message_header = self.client_socket.recv(HEADER_LENGTH)
+                        message_length = int(message_header.decode('utf-8').strip())
+                        message = self.client_socket.recv(message_length).decode('utf-8')
 
-                        while isMore:
-                            try:
-                                chunk = self.client_socket.recv(RECV_BUF_SIZE).decode('utf-8')
-                                if not chunk:
-                                    isMore = False
-                                message += chunk
-                            except:
-                                break
-                        message.strip()
+                        # blockNum = int(message.split(" ")[0])
+                        blockNum = int(message)
 
-                        blockNum = int(message.split(" ")[0])
+                        print("Sending Block Num From Request #" + str(blockNum))
 
                         blockPickled = open (("blockchain/block_" + str(blockNum) + ".block"), "rb")
                         blockData = pickle.load(blockPickled)
@@ -234,10 +228,10 @@ class Client(object):
 
                     # Occurs when the receiver has most up to date blockchain
 
-                    self.updateMaxKnownBlock(int(username))
+                    # self.updateMaxKnownBlock(int(username))
                     self.clientBlock = len(self.blockchain.chain)
-                    print("max: " + str(self.maxKnownBlock))
-                    print("client: " + str(self.clientBlock))
+                    # print("max: " + str(self.maxKnownBlock))
+                    # print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
                         # block.recordBlockNoSend()
@@ -245,11 +239,11 @@ class Client(object):
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
 
-                        if (self.clientBlock < self.maxKnownBlock):
-                            self.disconnect()
-                            self.setUsername("request")
-                            self.createConnection()
-                            self.sendMessage((str(self.clientBlock)).encode())
+                        # if (self.clientBlock < self.maxKnownBlock):
+                        #     self.disconnect()
+                        #     self.setUsername("request")
+                        #     self.createConnection()
+                        #     self.sendMessage((str(self.clientBlock)).encode())
                         continue
 
 
