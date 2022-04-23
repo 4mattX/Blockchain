@@ -53,9 +53,10 @@ class BlockchainApp(Frame):
         self.inMiner = False
         self.hashTimer = 100
         self.isMining = False
-
+        self.counter = 10
         self.client = None
 
+        self.isAutoMining = False
 
         self.thread = threading.Thread(target=self.mineBlock, name="mineThread")
         self.thread.daemon = True
@@ -118,13 +119,46 @@ class BlockchainApp(Frame):
         Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
 
         if (self.isMining):
-            Label(self.mainCanvas, text="Mining                            ", background=self.frameColor, foreground='lime', font=statusFont).place(x=190, y=16)
+            if (self.isAutoMining):
+                Label(self.mainCanvas, text="Waiting...          ", background=self.frameColor, foreground='orange', font=statusFont).place(x=190, y=16)
+            else:
+                Label(self.mainCanvas, text="Mining               ", background=self.frameColor, foreground='lime', font=statusFont).place(x=190, y=16)
         else:
-            Label(self.mainCanvas, text="Suspended", background=self.frameColor, foreground='red', font=statusFont).place(x=190, y=16)
+            if (self.isAutoMining):
+                Label(self.mainCanvas, text="Waiting...          ", background=self.frameColor, foreground='orange', font=statusFont).place(x=190, y=16)
+            else:
+                Label(self.mainCanvas, text="Suspended", background=self.frameColor, foreground='red', font=statusFont).place(x=190, y=16)
 
     def truncate(self, number, digits) -> float:
         stepper = 10.0 ** digits
         return math.trunc(stepper * number) / stepper
+
+    def addFriend(self):
+        self.inMiner = False
+        self.resetMainCanvas()
+        self.openFriendsFolder()
+
+        iconColor = '#2c2f33'
+        iconActiveColor = '#60666e'
+        iconClickColor = '#767c85'
+        buttonFont = font.Font(family='Uni Sans', size=16)
+        labelFont = font.Font(family='Uni Sans', weight='bold', size=18)
+        instructionFont = font.Font(family='Uni Sans', size=12)
+        BUTTON_WIDTH = 50
+        BUTTON_HEIGHT = 5
+
+        Label(self.mainCanvas, text='How to add friends ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
+
+        instructions = "1. Do this and then do that\n" + \
+                       "2. After you do this and that proceed\n" + \
+                       "3. For step three read this then go to four\n" + \
+                       "4. This might be the last step we will see \n" + \
+                       "5. Haha just kidding this is the last step"
+
+        Label(self.mainCanvas, text=instructions, background=self.frameColor, foreground='white', font=instructionFont, anchor='w').place(x=40, y=60)
+
+        pubKey = HoverButton(self.mainCanvas, text='Public Key Link', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor).place(x=40, y=400)
+        generateNew = HoverButton(self.mainCanvas, text='Generate New Key Set', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor).place(x=400, y=400)
 
     def sendFriend(self):
         self.inMiner = False
@@ -231,7 +265,7 @@ class BlockchainApp(Frame):
         Label(self.mainCanvas, text='Your Transactions: ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
         transactionsText = ""
-        for block in blockchain.chain:
+        for block in reversed(blockchain.chain):
             for transaction in block.getTransactions():
 
                 amount = "Amount: "
@@ -387,6 +421,17 @@ class BlockchainApp(Frame):
         # Label(self.mainCanvas, text=nonse, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
 
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
+        autoMiningButton = HoverButton(self.mainCanvas, text="Toggle Auto Mine", width=int(BUTTON_WIDTH / 3), background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.toggleAutoMine()).place(x=500, y=15)
+
+        self.updateMinerScreen()
+
+    def toggleAutoMine(self):
+        if(self.isAutoMining):
+            self.isAutoMining = False
+        else:
+            self.isAutoMining = True
+
+        self.updateMinerScreen()
 
     def updateBlockchain(self):
         print("request for " + str(len(blockchain.getChain())))
@@ -398,6 +443,8 @@ class BlockchainApp(Frame):
     def intermediateMine(self):
 
         self.isMining = not self.isMining
+        if (self.isAutoMining):
+            self.isMining = True
 
         BUTTON_WIDTH = 50
         iconColor = '#2c2f33'
@@ -419,8 +466,6 @@ class BlockchainApp(Frame):
             self.nonse = 0
             self.miningButton = HoverButton(self.mainCanvas, text="Start Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
 
-
-    # @jit(target="cuda")
     def mineBlock(self):
 
         BUTTON_WIDTH = 50
@@ -470,7 +515,7 @@ class BlockchainApp(Frame):
         self.miniCanvas.create_line(10, 0, width - 280, 0, fill='white', width=2)
 
         sendButton = Button(self, text="Send", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.sendFriend())
-        addFriendButton = Button(text="Add Friend", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.openFriendsFolder())
+        addFriendButton = Button(text="Add Friend", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.addFriend())
         mineButton = Button(text="Mine", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.mineBlockchain())
         viewChainButton = Button(text="Your Transactions", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.displayPersonalTransactions())
         viewTransactionsButton = Button(text="Pending Transactions", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='sunken', activebackground=iconActiveColor, font=buttonFont, command=lambda: self.displayTransactions())
@@ -513,12 +558,26 @@ if __name__ == '__main__':
 
 
     def update():
-        app.updateSideBar()
-        app.updateMinerScreen()
+        app.counter += 1
+        if (app.counter > 10):
+            app.updateSideBar()
+
+            if (len(blockchain.getChain()) > 1):
+                if (app.isAutoMining):
+                    app.intermediateMine()
+
+
+            app.counter = 0
+
+        if (app.isMining):
+            app.updateMinerScreen()
         # app.hashTimer += 100
         app.hashRate = 0
 
-        app.updateBlockchain()
+        try:
+            app.updateBlockchain()
+        except:
+            print("error sending update")
 
         if (not app.isMining):
             try:
