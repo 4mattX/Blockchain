@@ -477,15 +477,19 @@ class BlockchainApp(Frame):
             minerKey = RSA.import_key(file.read())
             file.close()
 
-        if (blockchain.minePendingTransactions(minerKey)):
-            self.addLine("lime@$>> BLOCK MINED!")
-            self.isMining = False
-            self.miningButton = HoverButton(self.mainCanvas, text="Start Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
-        else:
-            if (blockchain.killMine):
-                self.addLine("red@$>> Mining Suspended")
+        try:
+            if (blockchain.minePendingTransactions(minerKey)):
+                self.addLine("lime@$>> BLOCK MINED!")
+                if ( not self.isAutoMining):
+                    self.isMining = False
+                    self.miningButton = HoverButton(self.mainCanvas, text="Start Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
             else:
-                self.addLine("red@$>> There must be at least one pending transaction to mine")
+                if (blockchain.killMine):
+                    self.addLine("red@$>> Mining Suspended")
+                else:
+                    self.addLine("red@$>> There must be at least one pending transaction to mine")
+        except:
+            self.intermediateMine()
 
     def initUI(self):
 
