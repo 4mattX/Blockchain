@@ -136,7 +136,6 @@ class BlockchainApp(Frame):
     def addFriend(self):
         self.inMiner = False
         self.resetMainCanvas()
-        self.openFriendsFolder()
 
         iconColor = '#2c2f33'
         iconActiveColor = '#60666e'
@@ -149,16 +148,24 @@ class BlockchainApp(Frame):
 
         Label(self.mainCanvas, text='How to add friends ', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=20)
 
-        instructions = "1. Do this and then do that\n" + \
-                       "2. After you do this and that proceed\n" + \
-                       "3. For step three read this then go to four\n" + \
-                       "4. This might be the last step we will see \n" + \
-                       "5. Haha just kidding this is the last step"
+        instructions = "1. After receiving your friend's public key file (.PEM), click on the 'Open Friend Directory' button\n" + \
+                       "2. Place the file in the folder and then right click and select 'rename'\n" + \
+                       "3. Enter your friend's name or anything that will allow you to know who owns that wallet\n" + \
+                       "4. Make sure to keep the file type as .PEM or it will not be listed \n"
 
-        Label(self.mainCanvas, text=instructions, background=self.frameColor, foreground='white', font=instructionFont, anchor='w').place(x=40, y=60)
+        Label(self.mainCanvas, text=instructions, background=self.frameColor, foreground='white', font=instructionFont, anchor='w', justify='left').place(x=40, y=60)
 
-        pubKey = HoverButton(self.mainCanvas, text='Public Key Link', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor).place(x=40, y=400)
-        generateNew = HoverButton(self.mainCanvas, text='Generate New Key Set', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor).place(x=400, y=400)
+        instructions2 = "1. Click on the 'Personal Keys' button\n" + \
+                       "2. Right click on the 'public.pem' file and click copy\n" + \
+                       "3. Paste this file somewhere outside of this projects directory\n" + \
+                       "4. Right click on the pasted file and then select 'rename' and rename it \n" + \
+                       "5. Send the file to your friend through any secure application such as email or discord"
+
+        Label(self.mainCanvas, text='How to send your public key', background=self.frameColor, foreground='white', font=labelFont, anchor='w').place(x=20, y=200)
+        Label(self.mainCanvas, text=instructions2, background=self.frameColor, foreground='white', font=instructionFont, anchor='w', justify='left').place(x=40, y=240)
+
+        pubKey = HoverButton(self.mainCanvas, text='Personal Keys', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor, command=lambda BUTTON_HEIGHT=BUTTON_HEIGHT: self.openPersonalKeys()).place(x=40, y=400)
+        generateNew = HoverButton(self.mainCanvas, text='Open Friend Directory', foreground='white', background=iconColor, activebackground=iconActiveColor, relief='flat', overrelief='flat', font=buttonFont, highlightcolor=iconActiveColor, command=lambda BUTTON_HEIGHT=BUTTON_HEIGHT: self.openFriendsFolder()).place(x=400, y=400)
 
     def sendFriend(self):
         self.inMiner = False
@@ -253,8 +260,12 @@ class BlockchainApp(Frame):
     def openFriendsFolder(self):
         directory = os.path.dirname(__file__)
         friendsDirectory = "friends\README.txt"
-        absoluteDirectory = os.path.join(directory, friendsDirectory)
         subprocess.Popen(r'explorer /select,' + friendsDirectory)
+
+    def openPersonalKeys(self):
+        directory = os.path.dirname(__file__)
+        personalDirectory = "sender\public.pem"
+        subprocess.Popen(r'explorer /select,' + personalDirectory)
 
     def displayPersonalTransactions(self):
         self.inMiner = False
@@ -440,6 +451,13 @@ class BlockchainApp(Frame):
         blockchain.getClient().createConnection()
         blockchain.getClient().sendMessage(str(len(blockchain.getChain())).encode())
 
+    def generateNewKeys(self):
+        blockchain.generateKeys()
+
+        directory = os.path.dirname(__file__)
+        friendsDirectory = "generate\README.txt"
+        subprocess.Popen(r'explorer /select,' + friendsDirectory)
+
     def intermediateMine(self):
 
         self.isMining = not self.isMining
@@ -538,13 +556,13 @@ class BlockchainApp(Frame):
 
         # Labels for balance
         balanceString = "Balance: " + str(balance)
-        nodeString = "Nodes: "
-        # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
-        # balanceLabel.place(x=20, y=420)
-        nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
+        # nodeString = "Nodes: "
+        # # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
+        # # balanceLabel.place(x=20, y=420)
+        # nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
 
-        # Update Button
-        updateButton = Button(text="Update Blockchain", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.updateBlockchain()).place(x=17, y=550)
+        # Generate New Keys
+        updateButton = Button(text="Generate New Keys", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.generateNewKeys()).place(x=17, y=550)
 
 if __name__ == '__main__':
     # simulateBlockchain()
@@ -579,7 +597,9 @@ if __name__ == '__main__':
         app.hashRate = 0
 
         try:
-            app.updateBlockchain()
+            if (not app.isAutoMining):
+                if (not app.isMining):
+                    app.updateBlockchain()
         except:
             print("error sending update")
 

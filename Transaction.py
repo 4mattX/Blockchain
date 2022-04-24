@@ -23,7 +23,6 @@ class Transaction (object):
         self.hash = self.calculateHash()
         self.signed = False
 
-    # FIX LATER
     def signTransaction(self, privateKey, publicKey):
         signer = Signature.pkcs1_15.new(privateKey)
         signatureHash = Hash.SHA256.new()

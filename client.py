@@ -237,7 +237,7 @@ class Client(object):
                     # print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
-                        # block.recordBlockNoSend()
+                        block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
                         print("added block up-to-date receiver")
