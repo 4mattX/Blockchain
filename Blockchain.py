@@ -181,7 +181,6 @@ class Blockchain (object):
 
             self.pendingTransactions = [rewardGiver]
 
-
         return True
 
     def getWalletBalance(self, publicKey):
@@ -255,7 +254,6 @@ class Blockchain (object):
             block.nonse = blockData[4]
             block.hash = blockData[5]
             block.miner = blockData[6]
-            # block.mineHash = blockData[6]
 
             self.chain.append(block)
 

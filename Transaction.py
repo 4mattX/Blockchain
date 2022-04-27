@@ -12,8 +12,6 @@ from Cryptodome.Signature.pkcs1_15 import PKCS115_SigScheme
 
 class Transaction (object):
     def __init__(self, receiverKey, amount, publicKey):
-        # self.receiverKey = receiverKey.decode("base64")
-        # self.publicKey = publicKey.decode("base64")
         self.receiverKey = receiverKey
         self.publicKey = publicKey
 
@@ -40,14 +38,6 @@ class Transaction (object):
         return hashValue
 
     def isValidTransaction(self):
-        # if (self.hash != self.calculateHash()):
-        #     return False
-        #
-        # if(self.publicKey == self.receiverKey):
-        #     return False
-        #
-        # if not self.signed:
-        #     return False
 
         try:
             signer = Signature.pkcs1_15.new(self.publicKey)

@@ -1,16 +1,7 @@
-import ast
-import base64
 import binascii
-import io
 import pickle
 import socket
-import select
-import errno
-import sys
 import threading
-import time
-import traceback
-
 
 from Cryptodome.PublicKey import RSA
 
@@ -41,15 +32,11 @@ class Client(object):
         self.client_socket.connect((IP, PORT))
         self.client_socket.setblocking(False)
 
-        # self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SEND_BUF_SIZE)
-        # self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, RECV_BUF_SIZE)
-
         user = self.username.encode('utf-8')
         user_header = f"{len(user):<{HEADER_LENGTH}}".encode('utf-8')
         self.client_socket.send(user_header + user)
 
     def disconnect(self):
-        # self.client_socket.detach()
         self.client_socket.close()
 
     def updateMaxKnownBlock(self, num):
@@ -57,13 +44,10 @@ class Client(object):
             self.maxKnownBlock = num
 
     def sendMessage(self, message):
-        print("Sending Block")
-        # message = message.encode('utf-8')
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
         self.client_socket.send(message_header + message)
 
     def sendPending(self, message):
-        print("Sending Pending Transaction")
         message = message.encode('utf-8')
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
         self.client_socket.send(message_header + message)
@@ -73,7 +57,6 @@ class Client(object):
         clientThread.start()
 
     def receiveMessage(self):
-        print("STARTED RECEIVING MESSAGES")
         while True:
             try:
                 while True:
@@ -117,8 +100,6 @@ class Client(object):
                             transaction.setSignature(binascii.unhexlify(signature.strip()))
                         except binascii.Error:
                             print("BYTE DATA CORRUPTED")
-                            # transaction.setSignature(binascii.unhexlify(signature.strip()))
-
 
                         if (transaction.isValidTransaction()):
                             self.blockchain.pendingTransactions.append(transaction)
@@ -145,11 +126,6 @@ class Client(object):
                         receiverKey = message.split(",")[0]
                         amount = message.split(",")[1]
 
-                        # print(receiverKey)
-                        # print(self.blockchain.getChain()[-1].getMiner().decode('utf-8'))
-                        #
-                        # if str(receiverKey) == str(self.blockchain.getChain()[-1].getMiner().decode('utf-8')):
-                        print("SENT MINER REWARD SUCCESS")
                         transaction = Transaction(receiverKey, amount, None)
                         transaction.receiverKey = RSA.import_key(transaction.receiverKey)
 
@@ -163,8 +139,6 @@ class Client(object):
 
                         # blockNum = int(message.split(" ")[0])
                         blockNum = int(message)
-
-                        print("Sending Block Num From Request #" + str(blockNum))
 
                         if (blockNum > len(self.blockchain.getChain())):
                             continue
@@ -181,8 +155,6 @@ class Client(object):
                     # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
                     message_header = self.client_socket.recv(HEADER_LENGTH)
                     message_length = int(message_header.decode('utf-8').strip())
-                    # message = self.client_socket.recv(message_length).decode('utf-8')
-                    # message = self.client_socket.recv(message_length)
 
                     message = b''
                     isMore = True
@@ -196,21 +168,7 @@ class Client(object):
                         except:
                             break
 
-                    # Print message
-                    # print("username -> " + username)
-                    # print("message length -> " + str(message_length))
-                    # print(message)
-
                     newBlock = pickle.loads(bytes(message))
-
-                    # if (len(self.blockchain.chain) >= int(username)):
-                    #     return
-                    #
-                    # if (len(self.blockchain.chain) < int(username)):
-                    #     return
-
-                    # if (len(self.blockchain.chain) != int(username)):
-                    #     return
 
                     transactions = newBlock[0]
                     for transaction in transactions:
@@ -221,45 +179,19 @@ class Client(object):
                             transaction.publicKey = None
                             transaction.receiverKey = RSA.import_key(transaction.receiverKey)
 
-
                     block = Block(newBlock[0], newBlock[1], newBlock[2], self)
                     block.prev = newBlock[3]
                     block.nonse = newBlock[4]
                     block.hash = newBlock[5]
 
-                    # print("Block Loaded Success -> " + str(block.index))
-
                     # Occurs when the receiver has most up to date blockchain
-
-                    # self.updateMaxKnownBlock(int(username))
                     self.clientBlock = len(self.blockchain.chain)
-                    # print("max: " + str(self.maxKnownBlock))
-                    # print("client: " + str(self.clientBlock))
 
                     if (int(username) == self.clientBlock):
                         block.recordBlockNoSend()
                         self.blockchain.addBlock(block)
                         self.blockchain.pendingTransactions.clear()
-                        print("added block up-to-date receiver")
-
-                        # if (self.clientBlock < self.maxKnownBlock):
-                        #     self.disconnect()
-                        #     self.setUsername("request")
-                        #     self.createConnection()
-                        #     self.sendMessage((str(self.clientBlock)).encode())
                         continue
 
-
             except Exception as e:
-                # if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-                # if e.errno != errno.EAGAIN or e.errno != errno.EWOULDBLOCK:
-                #     print('Reading error: {}'.format(str(e)))
-
-
-                # if (self.clientBlock < self.maxKnownBlock):
-                #     self.disconnect()
-                #     self.setUsername("request")
-                #     self.createConnection()
-                #     self.sendMessage((str(self.clientBlock + 1)).encode())
                 continue
-

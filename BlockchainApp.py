@@ -1,6 +1,5 @@
 import gc
 import math
-import pathlib
 import threading
 import traceback
 from tkinter import Tk, Text, BOTH, W, N, E, S, Frame, Button, PhotoImage, Button, Label, Canvas, Text
@@ -9,10 +8,7 @@ import os
 import subprocess
 
 from Cryptodome.PublicKey import RSA
-
 from BlockChainProject.Blockchain import Blockchain
-from BlockChainProject.SettingsApp import SettingsApp
-from BlockChainProject.client import Client
 
 balance = 0
 balanceLabel = None
@@ -66,9 +62,12 @@ class BlockchainApp(Frame):
         # Establish Blockchain here
         directory = os.listdir("blockchain")
         if (len(directory) == 0):
-            blockchain.addFirstBlock()
+            print("no blocks recorded")
         else:
-            blockchain.getBlockChainFromData()
+            try:
+                blockchain.getBlockChainFromData()
+            except:
+                print("no blocks recorded")
 
         blockchain.app = self
 
@@ -80,7 +79,6 @@ class BlockchainApp(Frame):
         self.client = client
 
     def updateSideBar(self):
-        # self.balanceLabel.destroy()
         buttonFont = font.Font(family='Uni Sans', weight='bold', size=16)
         with open('sender/public.pem', "rb") as file:
             senderKey = RSA.import_key(file.read())
@@ -94,9 +92,6 @@ class BlockchainApp(Frame):
     def updateMinerScreen(self):
         if (not self.inMiner):
             return
-
-        # implement this every 10 seconds or so
-        # self.resetMainCanvas()
 
         lotsOfSpace = "                                                                                                 "
 
@@ -392,9 +387,6 @@ class BlockchainApp(Frame):
 
         Label(self.mainCanvas, text=transactionsText, background=self.frameColor, foreground='#adadad', font=tranFont).place(x=40, y=60)
 
-        # with open("mempool.csv", "rb") as file:
-        #     Label(self.mainCanvas, text=file.read(), background=self.frameColor, foreground='white', font=tranFont).place(x=40, y=50)
-
     def resetMainCanvas(self):
         width = self.master.winfo_width()
         height = self.master.winfo_height()
@@ -415,21 +407,11 @@ class BlockchainApp(Frame):
         BUTTON_WIDTH = 50
         BUTTON_HEIGHT = 5
 
-        # blockNum = str(len(blockchain.chain))
-        # blockNum = "Block Index: " + blockNum
-        # Label(self.mainCanvas, text=blockNum, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=135)
-        # amountTransactions = str(len(blockchain.pendingTransactions))
-
         mineStatus = "Mine Status: "
         hashRate = "Hash Rate: "
         nonse = "Nonse: " + str(self.nonse)
-        # amountTransactions = "Amount Transactions: " + amountTransactions
-        # Label(self.mainCanvas, text=amountTransactions, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=205)
-
 
         Label(self.mainCanvas, text=mineStatus, background=self.frameColor, foreground='white', font=statusFont).place(x=20, y=20)
-        # Label(self.mainCanvas, text=hashRate, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=100)
-        # Label(self.mainCanvas, text=nonse, background=self.frameColor, foreground='white', font=labelFont).place(x=20, y=170)
 
         self.miningButton = HoverButton(self.mainCanvas, text="Begin Mining", width=BUTTON_WIDTH, background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.intermediateMine()).place(x=60, y=400)
         autoMiningButton = HoverButton(self.mainCanvas, text="Toggle Auto Mine", width=int(BUTTON_WIDTH / 3), background=iconColor, foreground='white', activeforeground='white', relief='flat', overrelief='flat', activebackground=iconActiveColor, font=buttonFont, highlightcolor=iconActiveColor, command=lambda: self.toggleAutoMine()).place(x=500, y=15)
@@ -445,7 +427,7 @@ class BlockchainApp(Frame):
         self.updateMinerScreen()
 
     def updateBlockchain(self):
-        print("request for " + str(len(blockchain.getChain())))
+        # print("request for " + str(len(blockchain.getChain())))
         blockchain.getClient().disconnect()
         blockchain.getClient().setUsername("request")
         blockchain.getClient().createConnection()
@@ -556,28 +538,17 @@ class BlockchainApp(Frame):
 
         # Labels for balance
         balanceString = "Balance: " + str(balance)
-        # nodeString = "Nodes: "
-        # # balanceLabel = Label(self, text=balanceString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=420)
-        # # balanceLabel.place(x=20, y=420)
-        # nodesLabel = Label(self, text=nodeString, background='#23272a', foreground='white', font=buttonFont).place(x=20, y=500)
 
         # Generate New Keys
         updateButton = Button(text="Generate New Keys", width=BUTTON_WIDTH, background=self.frameColor, foreground='gray', activeforeground='white', relief='flat', overrelief='sunken', activebackground='gray', font=buttonFont, command=lambda: self.generateNewKeys()).place(x=17, y=550)
 
 if __name__ == '__main__':
-    # simulateBlockchain()
     root = Tk()
     root.geometry("1000x600+300+300")
     app = BlockchainApp()
     app.configure(bg='#23272a')
 
-    # client = Client("Node")
-    # client.createConnection()
-    #
-    # blockchain.addClient(client)
-
     blockchain.getClient().startThread()
-
 
     def update():
         app.counter += 1
@@ -610,11 +581,6 @@ if __name__ == '__main__':
                 gc.collect()
         gc.collect()
 
-        # client.receiveMessage()
-        # blockchain.getClient().receiveMessage()
-
-        # if (app.thread.is_alive() and app.isMining == False):
-        #     app.thread.join()
         root.after(500, update)
     update()
 

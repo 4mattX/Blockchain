@@ -71,21 +71,8 @@ class Block (object):
             # if (self.nonse % 100 == 0):
             self.blockchain.app.nonse = self.nonse
             self.blockchain.app.hashRate += 1
-                # appRef.mineBlockchain()
-
-            # if (self.nonse % 100 == 0):
-            #     print(self.blockchain.app.nonse)
-            #     appRef.mineBlockchain()
 
             self.hash = self.calculateHash()
-            # print("Nonse: ", self.nonse)
-            # print("Hash Attempt: ", self.hash)
-            # print(("Hash We Want: ", hashPuzzle, "..."))
-
-        # Make sure each transaction is valid in the amount
-        # Makes a list of all wallets
-
-
 
         wallets = []
         invalidWallets = []
